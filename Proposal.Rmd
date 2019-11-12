@@ -1,0 +1,42 @@
+---
+title: "DATA607 - Final Project Proposal"
+author: "Mael Illien, Salma Elshahawy, Dhairav Chhatbar"
+date: "11/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Motivation
+
+We want to try and answer the general question: What happens when there is a spike in arrests by the NYPD?
+
+We will start with the NYPD Arrests Data (Historic) data from NYC Open Data and conduct some exploratory data analysis to find out how arrests are distributed in general. We will explore trends like for example investigating seasonality trends or trends in particular kinds of arrest or by boroughs.
+
+To dig into the research question further, we will introduce sentiment analysis based on data extracted via the Twitter API. We will search for NYPD related tweets for the study period of interest (specify years) and perform sentiment analysis in order to score the tweets and match them against the number of arrests.
+
+We will then supplement our study with data from the Civilian Complaint Review Board. We will look at the number and types of complaints received and see if there is any link to the number of arrests by the NYPD during the period of study. Overeall, amongst the exploratory analysis we hope to answer what happens when there is a spike in arrests by the NYPD, is general sementement impacted by the arrests? We provide some analysis around this by the following hypothesis test:
+
+\[H0: There\;is\;no\; change\;in \; public\; senetement \; following \; NYPD \; arrests\]
+\[HA: There\; is\; a\; change\; in \; public \; sentement \; following \; NYPD \; arrests\]
+
+
+## Datasets
+Our analysis will be around 3 datasets
+
+#### NYPD Arrests 
+List of every arrest in NYC going back to 2006. Each record represents an arrest effected in NYC by the NYPD and includes information about the type of crime, suspect demographic, the location and time of enforcement.
+
+https://data.cityofnewyork.us/Public-Safety/NYPD-Arrests-Data-Historic-/8h9b-rp9u  
+
+
+#### Civilian Complaint Review Board (CCRB)
+List of complaints against New York City police officers alleging the use of excessive or unnecessary force, abuse of authority, discourtesy, or the use of offensive language.
+
+https://data.cityofnewyork.us/Public-Safety/Civilian-Complaint-Review-Board-CCRB-Complaints-Re/63nx-cpi9  
+
+
+#### Twitter 
+Pending...
