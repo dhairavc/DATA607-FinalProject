@@ -69,3 +69,24 @@ showtable(ccrb, "CCRB Data", 10)
 
 #### Twitter 
 Pending...
+
+## Exploratory Data Analysis
+
+We will look at:
+- Trends in seasonality of arrests
+- Trends in types of arrests
+- Trends in location of arrests
+- Geographical distribution of arrests in NYC
+- Trends in types of complaints
+- Trends in reporting method of complaints
+
+## Data Transformation
+
+Our two datasets share two main variables: arrest date and borough of incident. The date variable differs slightly between datasets. The NYPD Data is in the MM/DD/YYYY format and ranges from 01/01/2006 to 12/31/2018. The CCRB data only provides the year in the YYYY format ranging from 2000 to 2017. We will need to split the date variable in order join the datasets on the year.
+
+In order to combine data from the two sources, we will need aggregate the variables by year for ease of comparison. 
+
+## Data Analysis
+
+We will try to build a model to predit crime rates and predict the subsequent effect of compliants filed against the NYPD. We will model this prediction using linear regression, etc. 
+
