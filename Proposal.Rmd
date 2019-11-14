@@ -43,24 +43,25 @@ List of every arrest in NYC going back to 2006 through the end of the previous c
 
 We will access it with via the Socrata API as shown below. The data shown below is from a subset of the NYPD data of year 2019. The full dataset is very large and we will use a downsampled version for our analysis. 
 
+```{r include=FALSE}
+app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
+```
+
 ```{r}
 ## install.packages("RSocrata")
 library("RSocrata")
 
-app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
-
 year_to_date <- "https://data.cityofnewyork.us/resource/uip8-fykc.json"
 nypd_fullset <- "https://data.cityofnewyork.us/resource/8h9b-rp9u.json"
-
 nypd <- read.socrata(year_to_date, app_token = app_token)
 ```
 
 ```{r include=FALSE}
 library(kableExtra)
-
 showtable <- function(data, title="", nrows=10) {
   kable(head(data, nrows), caption = title) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), latex_options = "scale_down")
+  
 }
 ```
 
@@ -80,7 +81,7 @@ The New York City Civilian Complaint Review Board (CCRB) is an independent agenc
 
 ```{r message=FALSE, warning=FALSE}
 library(readr)
-ccrb <- read_csv("ccrb.csv", col_names = TRUE)
+ccrb <- read_csv("https://raw.githubusercontent.com/dhairavc/DATA607-FinalProject/master/ccrb.csv", col_names = TRUE)
 ```
 ```{r}
 showtable(ccrb, "CCRB Data", 10)
@@ -115,15 +116,12 @@ The diagram below is a representation of our overall methodology. Two factors we
 * How the work would flow downstream
 * Satisfying and cover all the requirements.
 
-```{r}
+```{r echo=FALSE}
 library(DiagrammeR)
 DiagrammeR::grViz("digraph {
-
 graph [layout = dot, rankdir = LR]
-
 # define the global styles of the nodes. We can override these in box if we wish
 node [shape = rectangle, style = filled, fillcolor = Linen]
-
 data1 [label = 'NYPD dataset', shape = folder, fillcolor = cyan]
 data2 [label = 'CCRB dataset', shape = folder, fillcolor = cyan]
 process [label =  'Process \n Data', fillcolor = green]
@@ -131,39 +129,32 @@ tidy [label =  'Tidy \n Data', fillcolor = green]
 statistical [label = 'Statistical \n Analysis', fillcolor = orange]
 results [label= 'Results', shape = oval, fillcolor = honeydew]
 conclusion [label= 'Conclusion', fillcolor = powderBlue]
-
 # edge definitions with the node IDs
 {data1 data2}  -> process -> tidy -> statistical -> {results conclusion}
 }")
-
 ```
 
 So we set a preliminary timeframe plan with the required tasks to keep them team on track and easy for us to track  progress. 
 
-```{r}
+```{r echo=FALSE}
 DiagrammeR::mermaid("
 gantt
         dateFormat  YYYY-MM-DD
         title Flowchart of the work flow estimated for the final project
-
         section Data acquisition
         Brain storm ideas            :done,    des1, 2014-01-06,2014-01-08
         Data collecting          :done,    des2, 2014-01-07, 2d
         Proposal draft               :done,  des3, 2014-01-07, 2d
-
         section Data processing
         Database API fetching     :active, des4, after des3, 1d
         Clean-up          :active, des5, after des4, 3d
         Transform             :      des6, after des5, 3d
         Exploratory analysis        :    des7, after des6, 3d
-
         section Statistical analysis
         Regression model               :    a1, after des6, 4d
         Visualization                  :   a2, after des7  , 2d
-
         section Documentation
         final submission               :doc1, after a2, 3d
         presentation          : after doc1, 2d
 ")
 ```
-
