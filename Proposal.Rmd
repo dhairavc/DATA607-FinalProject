@@ -39,8 +39,34 @@ List of every arrest in NYC going back to 2006. Each record represents an arrest
 
 #### Dataset desctiption
 
-List of every arrest in NYC going back to 2006 through the end of the previous calendar year. This is a breakdown of every arrest effected in NYC by the NYPD going back to 2006 through the end of the previous calendar year. This data is manually extracted every quarter and reviewed by the Office of Management Analysis and Planning before being posted on the NYPD website. Each record represents an arrest effected in NYC by the NYPD and includes information about the type of crime, the location and time of enforcement. In addition, information related to suspect demographics is also included. This data can be used by the public to explore the nature of police enforcement activity. Please refer to the attached data footnotes for additional information about this dataset. This dataset is about 4.8M rows nad 18 colums. 
+List of every arrest in NYC going back to 2006 through the end of the previous calendar year. This is a breakdown of every arrest effected in NYC by the NYPD going back to 2006 through the end of the previous calendar year. This data is manually extracted every quarter and reviewed by the Office of Management Analysis and Planning before being posted on the NYPD website. Each record represents an arrest effected in NYC by the NYPD and includes information about the type of crime, the location and time of enforcement. In addition, information related to suspect demographics is also included. This data can be used by the public to explore the nature of police enforcement activity. Please refer to the attached data footnotes for additional information about this dataset. This dataset has about 4.8M rows and 18 colums. 
 
+We will access it with via the Socrata API as shown below. The data shown below is from a subset of the NYPD data of year 2019. The full dataset is very large and we will use a downsampled version for our analysis. 
+
+```{r}
+## install.packages("RSocrata")
+library("RSocrata")
+
+app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
+
+year_to_date <- "https://data.cityofnewyork.us/resource/uip8-fykc.json"
+nypd_fullset <- "https://data.cityofnewyork.us/resource/8h9b-rp9u.json"
+
+nypd <- read.socrata(year_to_date, app_token = app_token)
+```
+
+```{r include=FALSE}
+library(kableExtra)
+
+showtable <- function(data, title="", nrows=10) {
+  kable(head(data, nrows), caption = title) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), latex_options = "scale_down")
+}
+```
+
+```{r}
+showtable(nypd,"NYPD Data", 10)
+```
 
 ### Civilian Complaint Review Board (CCRB)
 
@@ -53,25 +79,7 @@ List of complaints against New York City police officers alleging the use of exc
 The New York City Civilian Complaint Review Board (CCRB) is an independent agency. It is empowered to receive, investigate, mediate, hear, make findings, and recommend action on complaints against New York City police officers alleging the use of excessive or unnecessary force, abuse of authority, discourtesy, or the use of offensive language. The Board’s investigative staff, composed entirely of civilian employees, conducts investigations in an impartial fashion. The Board forwards its findings to the police commissioner. This dataset is about ~240K rows and 10 colums. 
 
 
-We will access it with via the Socrata API:
 
-```{r}
-## install.packages("RSocrata")
-library("RSocrata")
-
-app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
-
-nypd <- read.socrata("https://data.cityofnewyork.us/resource/uip8-fykc.json", app_token = app_token)
-```
-
-```{r}
-library(kableExtra)
-
-showtable <- function(data, title, nrows) {
-  kable(head(data, nrows), caption = title) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), latex_options = "scale_down")
-}
-```
 
 
 #### Civilian Complaint Review Board (CCRB)
