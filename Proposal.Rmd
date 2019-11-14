@@ -78,18 +78,6 @@ List of complaints against New York City police officers alleging the use of exc
 
 The New York City Civilian Complaint Review Board (CCRB) is an independent agency. It is empowered to receive, investigate, mediate, hear, make findings, and recommend action on complaints against New York City police officers alleging the use of excessive or unnecessary force, abuse of authority, discourtesy, or the use of offensive language. The Board’s investigative staff, composed entirely of civilian employees, conducts investigations in an impartial fashion. The Board forwards its findings to the police commissioner. This dataset is about ~240K rows and 10 colums. 
 
-
-
-
-
-#### Civilian Complaint Review Board (CCRB)
-List of complaints against New York City police officers alleging the use of excessive or unnecessary force, abuse of authority, discourtesy, or the use of offensive language.
-
-[Civilian Complaint Review Board (CCRB) - Complaints Received](https://data.cityofnewyork.us/Public-Safety/Civilian-Complaint-Review-Board-CCRB-Complaints-Re/63nx-cpi9)  
-
-
-
-
 ## Exploratory Data Analysis
 
 We will look at:
