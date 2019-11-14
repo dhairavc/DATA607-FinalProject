@@ -32,10 +32,26 @@ Overall, amongst the exploratory analysis we hope to answer what happens when th
 ## Datasets
 Our analysis will be around 3 datasets
 
-#### NYPD Arrests 
+### NYPD Arrests 
 List of every arrest in NYC going back to 2006. Each record represents an arrest effected in NYC by the NYPD and includes information about the type of crime, suspect demographic, the location and time of enforcement.
 
 [NYPD Arrests Data Historic](https://data.cityofnewyork.us/Public-Safety/NYPD-Arrests-Data-Historic-/8h9b-rp9u)  
+
+#### Dataset desctiption
+
+List of every arrest in NYC going back to 2006 through the end of the previous calendar year. This is a breakdown of every arrest effected in NYC by the NYPD going back to 2006 through the end of the previous calendar year. This data is manually extracted every quarter and reviewed by the Office of Management Analysis and Planning before being posted on the NYPD website. Each record represents an arrest effected in NYC by the NYPD and includes information about the type of crime, the location and time of enforcement. In addition, information related to suspect demographics is also included. This data can be used by the public to explore the nature of police enforcement activity. Please refer to the attached data footnotes for additional information about this dataset. This dataset is about 4.8M rows nad 18 colums. 
+
+
+### Civilian Complaint Review Board (CCRB)
+
+List of complaints against New York City police officers alleging the use of excessive or unnecessary force, abuse of authority, discourtesy, or the use of offensive language.
+
+[Civilian Complaint Review Board (CCRB) - Complaints Received](https://data.cityofnewyork.us/Public-Safety/Civilian-Complaint-Review-Board-CCRB-Complaints-Re/63nx-cpi9)  
+
+#### Dataset description
+
+The New York City Civilian Complaint Review Board (CCRB) is an independent agency. It is empowered to receive, investigate, mediate, hear, make findings, and recommend action on complaints against New York City police officers alleging the use of excessive or unnecessary force, abuse of authority, discourtesy, or the use of offensive language. The Board’s investigative staff, composed entirely of civilian employees, conducts investigations in an impartial fashion. The Board forwards its findings to the police commissioner. This dataset is about ~240K rows and 10 colums. 
+
 
 We will access it with via the Socrata API:
 
@@ -50,15 +66,13 @@ nypd <- read.socrata("https://data.cityofnewyork.us/resource/uip8-fykc.json", ap
 
 ```{r}
 library(kableExtra)
+
 showtable <- function(data, title, nrows) {
   kable(head(data, nrows), caption = title) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), latex_options = "scale_down")
 }
 ```
 
-```{r echo=TRUE}
-showtable(nypd, "NYPD Data", 10)
-```
 
 #### Civilian Complaint Review Board (CCRB)
 List of complaints against New York City police officers alleging the use of excessive or unnecessary force, abuse of authority, discourtesy, or the use of offensive language.
@@ -67,9 +81,6 @@ List of complaints against New York City police officers alleging the use of exc
 
 
 
-
-#### Twitter 
-Pending...
 
 ## Exploratory Data Analysis
 
@@ -90,4 +101,63 @@ In order to combine data from the two sources, we will need aggregate the variab
 ## Data Analysis
 
 We will try to build a model to predit crime rates and predict the subsequent effect of compliants filed against the NYPD. We will model this prediction using linear regression, etc. 
+
+## Workflow scheme
+
+The diagram below is a representation of our overall methodology. Two factors were determinant in how the team approached this project;
+
+* Overall duration of project: 3 Weeks
+* How the work would flow downstream
+* Satisfying and cover all the requirements.
+
+```{r}
+DiagrammeR::grViz("digraph {
+
+graph [layout = dot, rankdir = LR]
+
+# define the global styles of the nodes. We can override these in box if we wish
+node [shape = rectangle, style = filled, fillcolor = Linen]
+
+data1 [label = 'NYPD dataset', shape = folder, fillcolor = cyan]
+data2 [label = 'CCRB dataset', shape = folder, fillcolor = cyan]
+process [label =  'Process \n Data', fillcolor = green]
+tidy [label =  'Tidy \n Data', fillcolor = green]
+statistical [label = 'Statistical \n Analysis', fillcolor = orange]
+results [label= 'Results', shape = oval, fillcolor = honeydew]
+conclusion [label= 'Conclusion', fillcolor = powderBlue]
+
+# edge definitions with the node IDs
+{data1 data2}  -> process -> tidy -> statistical -> {results conclusion}
+}")
+
+```
+
+So we set a preliminary timeframe plan with the required tasks to keep them team on track and easy for us to track  progress. 
+
+```{r}
+DiagrammeR::mermaid("
+gantt
+        dateFormat  YYYY-MM-DD
+        title Flowchart of the work flow estimated for the final project
+
+        section Data acquisition
+        Brain storm ideas            :done,    des1, 2014-01-06,2014-01-08
+        Data collecting          :done,    des2, 2014-01-07, 2d
+        Proposal draft               :done,  des3, 2014-01-07, 2d
+
+        section Data processing
+        Database API fetching     :active, des4, after des3, 1d
+        Clean-up          :active, des5, after des4, 3d
+        Transform             :      des6, after des5, 3d
+        Exploratory analysis        :    des7, after des6, 3d
+
+        section Statistical analysis
+        Regression model               :    a1, after des6, 4d
+        Visualization                  :   a2, after des7  , 2d
+
+        section Documentation
+        final submission               :doc1, after a2, 3d
+        presentation          : after doc1, 2d
+")
+```
 
