@@ -24,13 +24,13 @@ To dig into the research question further, we will include data from the Civilia
 
 [Optional] We will then supplement our study with sentiment analysis based on data extracted via the Twitter API. We will search for NYPD related tweets for the study period of interest (specify years) and perform sentiment analysis in order to score the tweets and match them against the number of arrests.
 
-Overall, amongst the exploratory analysis we hope to answer what happens when there is a spike in arrests by the NYPD, is general sementement impacted by the arrests? We provide some analysis around this by the following hypothesis test:
+Overall, amongst the exploratory analysis we hope to uncover what happens when there is a spike in arrests by the NYPD and whether there is civilian discontent as expressed by complaints filed against the police force? We will provide some analysis around this by conducting the following hypothesis test:
 
-\[H0: There\;is\;no\; change\;in \; public\; senetement \; following \; NYPD \; arrests\]
-\[HA: There\; is\; a\; change\; in \; public \; sentement \; following \; NYPD \; arrests\]
+\[H0: There\;is\;no\; change\;in \; public\; discontent \; following \; NYPD \; arrests\]
+\[HA: There\; is\; a\; change\; in \; public \; discontent \; following \; NYPD \; arrests\]
 
 ## Datasets
-Our analysis will be around 3 datasets
+Our analysis will be around 2 datasets.
 
 ### NYPD Arrests 
 List of every arrest in NYC going back to 2006. Each record represents an arrest effected in NYC by the NYPD and includes information about the type of crime, suspect demographic, the location and time of enforcement.
@@ -80,13 +80,13 @@ The New York City Civilian Complaint Review Board (CCRB) is an independent agenc
 
 ## Exploratory Data Analysis
 
-We will look at:
-- Trends in seasonality of arrests
-- Trends in types of arrests
-- Trends in location of arrests
-- Geographical distribution of arrests in NYC
-- Trends in types of complaints
-- Trends in reporting method of complaints
+We will look at:  
+- Trends in seasonality of arrests  
+- Trends in types of arrests  
+- Trends in location of arrests  
+- Geographical distribution of arrests in NYC  
+- Trends in types of complaints  
+- Trends in reporting method of complaints  
 
 ## Data Transformation
 
@@ -107,6 +107,7 @@ The diagram below is a representation of our overall methodology. Two factors we
 * Satisfying and cover all the requirements.
 
 ```{r}
+library(DiagrammeR)
 DiagrammeR::grViz("digraph {
 
 graph [layout = dot, rankdir = LR]
