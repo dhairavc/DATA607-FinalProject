@@ -1,0 +1,116 @@
+---
+title: "statistical_exploratory_analysis"
+author: "Salma Elshahawy"
+date: "11/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Which variables we are interested in
+
+variable         | description
+---------------- | -----------
+`arrest_date`    | Exact date of arrest for the reported event.
+`ofns_desc`      | Description of internal classification corresponding with KY code (more general category than PD description).
+`arrest_boro`    | Borough of arrest. B(Bronx), S(Staten Island), K(Brooklyn), M(Manhattan), Q(Queens)
+`language`       | language of school where professor received education: english or non-english.
+`age_group`      | Perpetrator’s age within a category.
+`perp_sex`       | Perpetrator’s sex description.
+`perp_race`      | Perpetrator’s race description.
+`x_coord_cd`     | Midblock X-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104).
+`y_coord_cd`     | Midblock Y-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104)
+`latitude`       | Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
+`longitude`      | Longitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
+
+
+```{r}
+library("RSocrata")
+
+app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
+
+## used SoQl to filter the imported columns and to extract years as an integer from the date
+system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2017-01-01T00:00:00.000'&$select=date_trunc_ym(arrest_date) as month,ofns_desc,arrest_boro,age_group, perp_sex, perp_race",
+                     app_token = app_token))
+```
+
+```{r}
+head(arrests_df, 10)
+```
+
+```{r}
+system.time(complain_df <- read.socrata("https://data.cityofnewyork.us/resource/5uac-w243.csv?"))
+# complain_df <- read.csv("NYPD_Complaint_Data_Historic.csv", header = TRUE, stringsAsFactors = FALSE)
+```
+
+
+```{r}
+head(complain_df)
+```
+
+
+```{r}
+# all character columns to factor to start regression analysis:
+arrests_factor <- arrests_df %>%
+  mutate_if(is.character, as.factor)
+str(arrests_factor)
+```
+
+
+
+```{r}
+## count arrests per year per month
+library(dplyr)
+number_of_arrests <- arrests_df %>%
+  mutate_if(is.character, as.factor) %>%
+  group_by(arrest_boro, ofns_desc, ) %>%
+  summarise(arrests_count = n())
+number_of_arrests
+```
+
+```{r}
+# library(tidyverse)
+# # spread age group 
+# age_spread <- number_of_arrests %>%
+#   spread(key = age_group, value = arrests_count)
+# age_spread
+```
+
+## Type of the study
+
+This study is observational study, we intended to 
+```{r}
+## build regression model
+# str(number_of_arrests)
+glm(arrests_counts ~ perp_sex, family="binomial", data = number_of_arrests)
+```
+
+```{r}
+# Check distribution of target variable arrest count
+# class(number_of_arrests$arrests_count)
+# hist(number_of_arrests$arrests_count)
+hist(number_of_arrests$arrests_count,
+     breaks=30,
+     col="blue",
+     border="white",
+     xlab="Median number of arrests",
+     ylab="Arrests count",
+     main="Histogram: Median arrests count during 2017 to 2018")
+```
+
+let's explore outliers 
+
+```{r}
+boxplot(number_of_arrests$arrests_count)
+```
+
+
+
+
+
+
+
+
+
