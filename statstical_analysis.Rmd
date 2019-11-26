@@ -71,6 +71,7 @@ number_of_arrests
 ```
 
 ```{r}
+
 # spread age group
 age_spread <- number_of_arrests %>%
   spread(key = age_group, value = arrests_count)
@@ -104,6 +105,7 @@ let's explore outliers
 ```{r}
 boxplot(number_of_arrests$arrests_count)
 ```
+
 
 ```{r}
 #arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
@@ -139,12 +141,6 @@ ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = 
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
 
-```{r}
-# ggplot(grouped_offenses %>% top_n(10), aes(x = ofns_desc, y = count, fill = arrest_boro)) + 
-#   geom_bar(stat = 'identity', fill= 'lightblue', position=position_dodge()) + 
-#   xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
-#   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
-```
 ```{r}
 drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(date, arrest_boro) %>% summarize(count = n())
 ```
