@@ -1,0 +1,171 @@
+---
+title: "statistical_exploratory_analysis"
+author: "Salma Elshahawy"
+date: "11/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Which variables we are interested in
+
+variable         | description
+---------------- | -----------
+`arrest_date`    | Exact date of arrest for the reported event.
+`ofns_desc`      | Description of internal classification corresponding with KY code (more general category than PD description).
+`arrest_boro`    | Borough of arrest. B(Bronx), S(Staten Island), K(Brooklyn), M(Manhattan), Q(Queens)
+`language`       | language of school where professor received education: english or non-english.
+`age_group`      | Perpetrator’s age within a category.
+`perp_sex`       | Perpetrator’s sex description.
+`perp_race`      | Perpetrator’s race description.
+`x_coord_cd`     | Midblock X-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104).
+`y_coord_cd`     | Midblock Y-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104)
+`latitude`       | Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
+`longitude`      | Longitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
+
+
+```{r}
+library("RSocrata")
+
+app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
+
+## used SoQl to filter the imported columns and to extract years as an integer from the date
+system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2017-01-01T00:00:00.000'&$select=date_trunc_ym(arrest_date) as month,ofns_desc,arrest_boro,age_group, perp_sex, perp_race",
+                     app_token = app_token))
+```
+
+```{r}
+head(arrests_df, 10)
+```
+
+```{r}
+system.time(complain_df <- read.socrata("https://data.cityofnewyork.us/resource/5uac-w243.csv?"))
+# complain_df <- read.csv("NYPD_Complaint_Data_Historic.csv", header = TRUE, stringsAsFactors = FALSE)
+```
+
+
+```{r}
+head(complain_df)
+```
+
+
+```{r}
+library(tidyverse)
+# all character columns to factor to start regression analysis:
+arrests_factor <- arrests_df %>%
+  mutate_if(is.character, as.factor)
+str(arrests_factor)
+```
+
+
+```{r}
+## count arrests per year per month
+library(dplyr)
+number_of_arrests <- arrests_df %>%
+  mutate_if(is.character, as.factor) %>%
+  group_by(arrest_boro, ofns_desc, ) %>%
+  summarise(arrests_count = n())
+number_of_arrests
+```
+
+```{r}
+# spread age group
+age_spread <- number_of_arrests %>%
+  spread(key = age_group, value = arrests_count)
+age_spread
+```
+
+## Type of the study
+
+This study is observational study, we intended to 
+```{r}
+## build regression model
+# str(number_of_arrests)
+glm(arrests_counts ~ perp_sex, family="binomial", data = number_of_arrests)
+```
+
+```{r}
+# Check distribution of target variable arrest count
+# class(number_of_arrests$arrests_count)
+# hist(number_of_arrests$arrests_count)
+hist(number_of_arrests$arrests_count,
+     breaks=30,
+     col="blue",
+     border="white",
+     xlab="Median number of arrests",
+     ylab="Arrests count",
+     main="Histogram: Median arrests count during 2017 to 2018")
+```
+
+let's explore outliers 
+
+```{r}
+boxplot(number_of_arrests$arrests_count)
+```
+
+```{r}
+#arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
+arrests_by_year <- arrests_df %>% separate(date, c("year", "month", "day"), sep = '-')
+grouped_offenses <- arrests_by_year %>% group_by(arrest_boro, ofns_desc) %>% summarize(count = n()) %>% arrange(desc(count))
+```
+
+```{r}
+grouped_boro <- arrests_by_year %>% group_by(arrest_boro) %>% summarize(count = n()) %>% arrange(desc(count))
+```
+
+```{r}
+ggplot(grouped_boro, aes(x = reorder(arrest_boro, -count), y = count)) + 
+  geom_bar(stat = 'identity', fill= 'lightblue') + 
+  geom_text(aes(label=count), size = 5, hjust=1.2) +
+  coord_flip() + 
+  xlab("borough") + ylab("count") + ggtitle("Borough Aggregation") 
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot(grouped_offenses %>% top_n(25), aes(x = reorder(ofns_desc, -count), y = count)) + 
+  geom_bar(stat = 'identity', fill= 'lightblue') + 
+  coord_flip() + 
+  xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
+  theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = count)) + 
+  geom_bar(stat = 'identity', fill= 'lightblue') + 
+  coord_flip() + 
+  xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
+  theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+```
+
+```{r}
+# ggplot(grouped_offenses %>% top_n(10), aes(x = ofns_desc, y = count, fill = arrest_boro)) + 
+#   geom_bar(stat = 'identity', fill= 'lightblue', position=position_dodge()) + 
+#   xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
+#   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+```
+```{r}
+drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(date, arrest_boro) %>% summarize(count = n())
+```
+
+```{r}
+ggplot(drugs, aes(x = date, y = count, color = arrest_boro)) +
+  geom_point() + 
+  xlab("date") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
+  theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot(arrests_by_year, aes(x = age_group, fill = perp_sex)) + 
+  geom_histogram(stat = "count", position=position_dodge()) +
+  scale_fill_brewer(palette="Blues") + 
+  xlab("age") + ylab("count")  + ggtitle("Perpetrator Age Group and Gender Distribution") 
+```
+
+
+
+
+
+
+
