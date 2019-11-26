@@ -52,12 +52,12 @@ head(complain_df)
 
 
 ```{r}
+library(tidyverse)
 # all character columns to factor to start regression analysis:
 arrests_factor <- arrests_df %>%
   mutate_if(is.character, as.factor)
 str(arrests_factor)
 ```
-
 
 
 ```{r}
@@ -71,11 +71,11 @@ number_of_arrests
 ```
 
 ```{r}
-# library(tidyverse)
-# # spread age group 
-# age_spread <- number_of_arrests %>%
-#   spread(key = age_group, value = arrests_count)
-# age_spread
+
+# spread age group
+age_spread <- number_of_arrests %>%
+  spread(key = age_group, value = arrests_count)
+age_spread
 ```
 
 ## Type of the study
@@ -107,6 +107,57 @@ boxplot(number_of_arrests$arrests_count)
 ```
 
 
+```{r}
+#arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
+arrests_by_year <- arrests_df %>% separate(date, c("year", "month", "day"), sep = '-')
+grouped_offenses <- arrests_by_year %>% group_by(arrest_boro, ofns_desc) %>% summarize(count = n()) %>% arrange(desc(count))
+```
+
+```{r}
+grouped_boro <- arrests_by_year %>% group_by(arrest_boro) %>% summarize(count = n()) %>% arrange(desc(count))
+```
+
+```{r}
+ggplot(grouped_boro, aes(x = reorder(arrest_boro, -count), y = count)) + 
+  geom_bar(stat = 'identity', fill= 'lightblue') + 
+  geom_text(aes(label=count), size = 5, hjust=1.2) +
+  coord_flip() + 
+  xlab("borough") + ylab("count") + ggtitle("Borough Aggregation") 
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot(grouped_offenses %>% top_n(25), aes(x = reorder(ofns_desc, -count), y = count)) + 
+  geom_bar(stat = 'identity', fill= 'lightblue') + 
+  coord_flip() + 
+  xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
+  theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = count)) + 
+  geom_bar(stat = 'identity', fill= 'lightblue') + 
+  coord_flip() + 
+  xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
+  theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+```
+
+```{r}
+drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(date, arrest_boro) %>% summarize(count = n())
+```
+
+```{r}
+ggplot(drugs, aes(x = date, y = count, color = arrest_boro)) +
+  geom_point() + 
+  xlab("date") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
+  theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot(arrests_by_year, aes(x = age_group, fill = perp_sex)) + 
+  geom_histogram(stat = "count", position=position_dodge()) +
+  scale_fill_brewer(palette="Blues") + 
+  xlab("age") + ylab("count")  + ggtitle("Perpetrator Age Group and Gender Distribution") 
+```
 
 
 
