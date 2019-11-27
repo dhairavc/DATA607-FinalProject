@@ -40,7 +40,7 @@ library("RSocrata")
 app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
 
 ## used SoQl to filter the imported columns and to extract years as an integer from the date
-system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2015-01-01T00:00:00.000'&$select=date_extract_y(arrest_date) as year,ofns_desc,arrest_boro,age_group, perp_sex, perp_race",
+system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2014-01-01T00:00:00.000'&$select=date_extract_y(arrest_date) as year,ofns_desc,arrest_boro,age_group, perp_sex, perp_race",
                      app_token = app_token))
 ```
 
@@ -52,9 +52,9 @@ head(arrests_df, 10)
 income14_18 <- function (file, table) {
   table_content <- read_xls(path = file, sheet = table, skip = 2) %>%
     na.omit()
-  colnames(table_content) = c("area","year","month","labor_force","employed","unemployed","unemployment_rate")
+  colnames(table_content) = c("boro","year","month","labor_force","employed","unemployed","unemployment_rate")
   final_table <- table_content %>%
-    select(area, year, labor_force, employed, unemployed, unemployment_rate)
+    select(boro, year, labor_force, employed, unemployed, unemployment_rate) 
   return(final_table)
 }
 
