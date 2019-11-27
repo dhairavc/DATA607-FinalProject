@@ -30,6 +30,8 @@ if (!require('dplyr')) install.packages ('dplyr')
 if (!require('RSocrata')) install.packages ('RSocrata')
 if (!require('tidyverse')) install.packages ('tidyverse')
 if (!require('ggplot2')) install.packages ('ggplot2')
+if (!require('readxl')) install.packages ('readxl')
+
 ```
 
 ```{r}
@@ -44,6 +46,28 @@ system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8
 
 ```{r}
 head(arrests_df, 10)
+```
+
+```{r}
+income14_18 <- function (file, table) {
+  table_content <- read_xls(path = file, sheet = table, skip = 2) %>%
+    na.omit()
+  colnames(table_content) = c("area","year","month","labor_force","employed","unemployed","unemployment_rate")
+  final_table <- table_content %>%
+    select(area, year, labor_force, employed, unemployed, unemployment_rate)
+  return(final_table)
+}
+
+
+bronx_income <- income14_18("14-18_income.xls", "Bronx")
+queens_income <- income14_18("14-18_income.xls", "Queens")
+brooklyn_income <- income14_18("14-18_income.xls", "Brooklyn")
+manhattan_income <- income14_18("14-18_income.xls", "Manhattan")
+staten_income <- income14_18("14-18_income.xls", "Staten Island")
+
+income_table <- Reduce(function(...) merge(..., all=T), list(bronx_income, queens_income, brooklyn_income, manhattan_income, staten_income))
+
+income_table 
 ```
 
 
@@ -87,10 +111,11 @@ drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year
 
 ```{r}
 ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
-  geom_point() + 
+  geom_jitter() + 
   xlab("date") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
+
 
 ```{r message=FALSE, warning=FALSE}
 ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) + 
