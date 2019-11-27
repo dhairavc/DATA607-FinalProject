@@ -25,6 +25,12 @@ variable         | description
 `latitude`       | Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 `longitude`      | Longitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 
+```{r message=FALSE, warning=FALSE}
+if (!require('dplyr')) install.packages ('dplyr')
+if (!require('RSocrata')) install.packages ('RSocrata')
+if (!require('tidyverse')) install.packages ('tidyverse')
+if (!require('ggplot2')) install.packages ('ggplot2')
+```
 
 ```{r}
 library("RSocrata")
@@ -32,7 +38,7 @@ library("RSocrata")
 app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
 
 ## used SoQl to filter the imported columns and to extract years as an integer from the date
-system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2017-01-01T00:00:00.000'&$select=date_trunc_ym(arrest_date) as month,ofns_desc,arrest_boro,age_group, perp_sex, perp_race",
+system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2015-01-01T00:00:00.000'&$select=date_extract_y(arrest_date) as year,ofns_desc,arrest_boro,age_group, perp_sex, perp_race",
                      app_token = app_token))
 ```
 
@@ -40,81 +46,15 @@ system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8
 head(arrests_df, 10)
 ```
 
-```{r}
-system.time(complain_df <- read.socrata("https://data.cityofnewyork.us/resource/5uac-w243.csv?"))
-# complain_df <- read.csv("NYPD_Complaint_Data_Historic.csv", header = TRUE, stringsAsFactors = FALSE)
-```
-
-
-```{r}
-head(complain_df)
-```
-
-
-```{r}
-library(tidyverse)
-# all character columns to factor to start regression analysis:
-arrests_factor <- arrests_df %>%
-  mutate_if(is.character, as.factor)
-str(arrests_factor)
-```
-
-
-```{r}
-## count arrests per year per month
-library(dplyr)
-number_of_arrests <- arrests_df %>%
-  mutate_if(is.character, as.factor) %>%
-  group_by(arrest_boro, ofns_desc, ) %>%
-  summarise(arrests_count = n())
-number_of_arrests
-```
-
-```{r}
-
-# spread age group
-age_spread <- number_of_arrests %>%
-  spread(key = age_group, value = arrests_count)
-age_spread
-```
-
-## Type of the study
-
-This study is observational study, we intended to 
-```{r}
-## build regression model
-# str(number_of_arrests)
-glm(arrests_counts ~ perp_sex, family="binomial", data = number_of_arrests)
-```
-
-```{r}
-# Check distribution of target variable arrest count
-# class(number_of_arrests$arrests_count)
-# hist(number_of_arrests$arrests_count)
-hist(number_of_arrests$arrests_count,
-     breaks=30,
-     col="blue",
-     border="white",
-     xlab="Median number of arrests",
-     ylab="Arrests count",
-     main="Histogram: Median arrests count during 2017 to 2018")
-```
-
-let's explore outliers 
-
-```{r}
-boxplot(number_of_arrests$arrests_count)
-```
-
 
 ```{r}
 #arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
-arrests_by_year <- arrests_df %>% separate(date, c("year", "month", "day"), sep = '-')
-grouped_offenses <- arrests_by_year %>% group_by(arrest_boro, ofns_desc) %>% summarize(count = n()) %>% arrange(desc(count))
+# arrests_by_year <- arrests_df %>% separate(year, c("year", "month", "day"), sep = '-')
+grouped_offenses <- arrests_df %>% group_by(arrest_boro, ofns_desc) %>% summarize(count = n()) %>% arrange(desc(count))
 ```
 
 ```{r}
-grouped_boro <- arrests_by_year %>% group_by(arrest_boro) %>% summarize(count = n()) %>% arrange(desc(count))
+grouped_boro <- arrests_df %>% group_by(arrest_boro) %>% summarize(count = n()) %>% arrange(desc(count))
 ```
 
 ```{r}
@@ -142,23 +82,22 @@ ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = 
 ```
 
 ```{r}
-drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(date, arrest_boro) %>% summarize(count = n())
+drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year, arrest_boro) %>% summarize(count = n())
 ```
 
 ```{r}
-ggplot(drugs, aes(x = date, y = count, color = arrest_boro)) +
+ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   geom_point() + 
   xlab("date") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
 
 ```{r message=FALSE, warning=FALSE}
-ggplot(arrests_by_year, aes(x = age_group, fill = perp_sex)) + 
+ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) + 
   geom_histogram(stat = "count", position=position_dodge()) +
   scale_fill_brewer(palette="Blues") + 
   xlab("age") + ylab("count")  + ggtitle("Perpetrator Age Group and Gender Distribution") 
 ```
-
 
 
 
