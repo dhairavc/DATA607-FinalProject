@@ -70,6 +70,22 @@ income_table <- Reduce(function(...) merge(..., all=T), list(bronx_income, queen
 income_table 
 ```
 
+## analysis
+```{r}
+boxplot(unemployment_rate ~ boro,
+        data = income_table,
+        main = "Different boxplot for uneployment rate in the 5 counties over years",
+        ylab = "Unemployment rate %",
+        xlab = "",
+        col = "cyan",
+        border = "blue", 
+        las = 2,
+        names = c("Bronx", "Queens", "Brooklyn", "Manhattan", "Staten Island"))
+```
+
+It seems that overall, Bronx had the highest unemployment rate among other areas. Let's invistigate the unemployment rate over the years and if it is related to crime rate for the same years?
+
+
 
 ```{r}
 #arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
