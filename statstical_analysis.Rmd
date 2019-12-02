@@ -33,13 +33,13 @@ if (!require('ggplot2')) install.packages ('ggplot2')
 if (!require('readxl')) install.packages ('readxl')
 if (!require('plyr')) install.packages('plyr')
 if (!require('treemap')) install.packages('treemap')
+if (!require('leaflet')) install.packages ('leaflet')
 ```
 
 ```{r}
 app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
-
 ## used SoQl to filter the imported columns and to extract years as an integer from the date
-system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2014-01-01T00:00:00.000'&$select=date_extract_y(arrest_date) as year,ofns_desc,arrest_boro,age_group, perp_sex, perp_race",
+system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2014-01-01T00:00:00.000'&$select=date_extract_y(arrest_date) as year,ofns_desc,arrest_boro,age_group, perp_sex, perp_race, latitude, longitude",
                      app_token = app_token))
 ```
 
@@ -53,7 +53,6 @@ queens_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQb
 brooklyn_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1054422077&single=true&output=csv"
 manhattan_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=652704166&single=true&output=csv"
 staten_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1149424970&single=true&output=csv"
-
 bronx <- read.csv(bronx_url, skip = 2, stringsAsFactors = FALSE) 
 queens <- read.csv(queens_url, skip = 2, stringsAsFactors = FALSE)
 brooklyn <- read.csv(brooklyn_url, skip = 2, stringsAsFactors = FALSE)
@@ -70,40 +69,26 @@ clean_table <- function (table) {
     select(arrest_boro, year, labor_force, employed, unemployed, unemployment_rate) 
   return(final_table)
 }
-
-
 bronx_income <- clean_table(bronx)
 queens_income <- clean_table(queens)
 brooklyn_income <- clean_table(brooklyn)
 manhattan_income <- clean_table(manhattan)
 staten_income <- clean_table(staten)
-
 income_table <- Reduce(function(...) merge(..., all=T), list(bronx_income, queens_income, brooklyn_income, manhattan_income, staten_income))
-
 income_table 
 ```
 
   
 ## analysis
 ```{r}
-# boxplot(unemployment_rate ~ arrest_boro,
-#         data = income_table,
-#         main = "Different boxplot for uneployment rate in the 5 counties over years",
-#         ylab = "Unemployment rate %",
-#         xlab = "",
-#         col = "cyan",
-#         border = "blue") +
-#   facet_wrap(~year)
-theme_set(theme_bw())
-ggplot(income_table, aes(x=arrest_boro, y=unemployment_rate)) + 
-    geom_boxplot(main = "Different boxplot for uneployment rate in the 5 counties over years",
+boxplot(unemployment_rate ~ arrest_boro,
+        data = income_table,
+        main = "Different boxplot for uneployment rate in the 5 counties over years",
         ylab = "Unemployment rate %",
         xlab = "",
-        col = "blue",
-        border = "blue") +
-    facet_wrap(~year, scale="free") + 
-  theme(axis.text.x = element_text(angle=60, vjust = 0.6)) 
-
+        col = "cyan",
+        border = "blue", 
+        las = 1)
 ```
 
 ```{r}
@@ -120,7 +105,6 @@ by_boro <- arrests_df
 by_boro$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan")) 
 head(by_boro)
 ```
-
 ```{r}
 murder_counts <- by_boro %>%
   group_by(arrest_boro, year, perp_race) %>%
@@ -128,16 +112,12 @@ murder_counts <- by_boro %>%
   arrange(desc(year))
 murder_counts
 ```
-
 ```{r}
 merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)) %>%
   na.omit() %>%
   arrange(desc(year))
 merged
 ```
-
-
-
 ```{r}
 # Data Prep
 library(forcats)
@@ -157,9 +137,7 @@ ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) +
        title= "Diverging Bars of unemployment rates in boro") + 
   coord_flip()
 ```
-
 Brox seems to have the largest amount of unemployment rate which is above the average and in the same time it has the highest crime amonhest other counties. 
-
 ```{r}
 # Data Prep
 library(forcats)
@@ -179,13 +157,10 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
        title= "Diverging Bars of number of murders per county") + 
   coord_flip()
 ```
-
 As illustrated from the diverge bar that **Bronx** also has above average number of crimes
-
-
 ```{r}
+library(ggplot2)
 theme_set(theme_classic())
-
 # Plot
 g <- ggplot(by_boro, aes(arrest_boro))
 g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
@@ -195,12 +170,7 @@ g + geom_density(aes(fill=factor(age_group)), alpha=0.8) +
          x="Borogh name",
          fill="# cimes committed per age") 
 ```
-
-We can see that 25-44 age category is the most age category for committing a crime. As demonestrated also, **Bronx** seems to have the highest density of crimes amongest other boroghs
-
-
-
-
+We can see that 25-44 age category is the most age category for committing a crime. As demonestrated also, **Bronx** seems to have the highest density of crimes am
 ```{r}
 map <- murder_counts %>% filter(year == 2018)
 treemap(map, #Your data frame object
@@ -214,16 +184,34 @@ treemap(map, #Your data frame object
         ) 
 ```
 
+```{r echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
+
+arrests_map <- arrests_df %>% filter(year == 2018)
+
+singleicon <- makeIcon(iconUrl = "https://image.flaticon.com/icons/svg/1331/1331396.svg",
+                       iconWidth = 45,
+                       iconHeight = 45,
+                       iconAnchorX = 0,
+                       iconAnchorY = 0)
+
+leaflet(arrests_map, width = '100%') %>% addTiles() %>% 
+                                  addMarkers(lng = ~longitude, lat = ~latitude, 
+                                             clusterOptions = markerClusterOptions(), 
+                                             popup = paste("<b>Offense: </b>", arrests_map$ofns_desc, "<br/>",
+                                                           "<b>Age Group: </b>", arrests_map$age_group, "<br/>",
+                                                           "<b>Sex: </b>", arrests_map$perp_sex, "<br/>",
+                                                           "<b>Race: </b>", arrests_map$perp_race),
+                                             icon = singleicon)
+```
+
 ```{r}
 #arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
 # arrests_by_year <- arrests_df %>% separate(year, c("year", "month", "day"), sep = '-')
-grouped_offenses <- arrests_df %>% group_by(arrest_boro, ofns_desc) %>% summarize(count = n()) %>% arrange(desc(count))
+grouped_offenses <- arrests_df %>% group_by(arrest_boro, ofns_desc) %>% dplyr::summarize(count = n()) %>% arrange(desc(count))
 ```
-
 ```{r}
 grouped_boro <- arrests_df %>% group_by(arrest_boro) %>% dplyr::summarize(count = n()) %>% arrange(desc(count))
 ```
-
 ```{r}
 ggplot(grouped_boro, aes(x = reorder(arrest_boro, -count), y = count)) + 
   geom_bar(stat = 'identity', fill= 'lightblue') + 
@@ -231,7 +219,6 @@ ggplot(grouped_boro, aes(x = reorder(arrest_boro, -count), y = count)) +
   coord_flip() + 
   xlab("borough") + ylab("count") + ggtitle("Borough Aggregation") 
 ```
-
 ```{r message=FALSE, warning=FALSE}
 ggplot(grouped_offenses %>% top_n(25), aes(x = reorder(ofns_desc, -count), y = count)) + 
   geom_bar(stat = 'identity', fill= 'lightblue') + 
@@ -239,7 +226,6 @@ ggplot(grouped_offenses %>% top_n(25), aes(x = reorder(ofns_desc, -count), y = c
   xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
-
 ```{r message=FALSE, warning=FALSE}
 ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = count)) + 
   geom_bar(stat = 'identity', fill= 'lightblue') + 
@@ -247,28 +233,18 @@ ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = 
   xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
-
 ```{r}
-drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year, arrest_boro) %>% summarize(count = n())
+drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year, arrest_boro) %>% dplyr::summarize(count = n())
 ```
-
 ```{r}
 ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   geom_jitter() + 
   xlab("date") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
-
-
 ```{r message=FALSE, warning=FALSE}
 ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) + 
   geom_histogram(stat = "count", position=position_dodge()) +
   scale_fill_brewer(palette="Blues") + 
   xlab("age") + ylab("count")  + ggtitle("Perpetrator Age Group and Gender Distribution") 
 ```
-
-
-
-
-
-
