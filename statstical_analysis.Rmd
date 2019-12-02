@@ -86,14 +86,24 @@ income_table
   
 ## analysis
 ```{r}
-boxplot(unemployment_rate ~ arrest_boro,
-        data = income_table,
-        main = "Different boxplot for uneployment rate in the 5 counties over years",
+# boxplot(unemployment_rate ~ arrest_boro,
+#         data = income_table,
+#         main = "Different boxplot for uneployment rate in the 5 counties over years",
+#         ylab = "Unemployment rate %",
+#         xlab = "",
+#         col = "cyan",
+#         border = "blue") +
+#   facet_wrap(~year)
+theme_set(theme_bw())
+ggplot(income_table, aes(x=arrest_boro, y=unemployment_rate)) + 
+    geom_boxplot(main = "Different boxplot for uneployment rate in the 5 counties over years",
         ylab = "Unemployment rate %",
         xlab = "",
-        col = "cyan",
-        border = "blue", 
-        las = 1)
+        col = "blue",
+        border = "blue") +
+    facet_wrap(~year, scale="free") + 
+  theme(axis.text.x = element_text(angle=60, vjust = 0.6)) 
+
 ```
 
 ```{r}
@@ -174,7 +184,6 @@ As illustrated from the diverge bar that **Bronx** also has above average number
 
 
 ```{r}
-library(ggplot2)
 theme_set(theme_classic())
 
 # Plot
@@ -187,7 +196,7 @@ g + geom_density(aes(fill=factor(age_group)), alpha=0.8) +
          fill="# cimes committed per age") 
 ```
 
-We can see that 25-44 age category is the most age category for committing a crime. As demonestrated also, **Bronx** seems to have the highest density of crimes am
+We can see that 25-44 age category is the most age category for committing a crime. As demonestrated also, **Bronx** seems to have the highest density of crimes amongest other boroghs
 
 
 
@@ -212,7 +221,7 @@ grouped_offenses <- arrests_df %>% group_by(arrest_boro, ofns_desc) %>% summariz
 ```
 
 ```{r}
-grouped_boro <- arrests_df %>% group_by(arrest_boro) %>% summarize(count = n()) %>% arrange(desc(count))
+grouped_boro <- arrests_df %>% group_by(arrest_boro) %>% dplyr::summarize(count = n()) %>% arrange(desc(count))
 ```
 
 ```{r}
