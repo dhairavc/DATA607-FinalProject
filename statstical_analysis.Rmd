@@ -49,21 +49,35 @@ head(arrests_df, 10)
 ```
 
 ```{r}
-income14_18 <- function (file, table) {
-  table_content <- read_xls(path = file, sheet = table, skip = 2) %>%
+bronx_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=0&single=true&output=csv"
+queens_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1191228861&single=true&output=csv"
+brooklyn_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1054422077&single=true&output=csv"
+manhattan_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=652704166&single=true&output=csv"
+staten_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1149424970&single=true&output=csv"
+
+bronx <- read.csv(bronx_url, skip = 2, stringsAsFactors = FALSE) 
+queens <- read.csv(queens_url, skip = 2, stringsAsFactors = FALSE)
+brooklyn <- read.csv(brooklyn_url, skip = 2, stringsAsFactors = FALSE)
+manhattan <- read.csv(manhattan_url, skip = 2, stringsAsFactors = FALSE)
+staten <- read.csv(staten_url, skip = 2, stringsAsFactors = FALSE)
+```
+
+```{r}
+clean_table <- function (table) {
+  table_content <- table %>%
     na.omit()
-  colnames(table_content) = c("boro","year","month","labor_force","employed","unemployed","unemployment_rate")
+  colnames(table_content) = c("arrest_boro","year","month","labor_force","employed","unemployed","unemployment_rate")
   final_table <- table_content %>%
-    select(boro, year, labor_force, employed, unemployed, unemployment_rate) 
+    select(arrest_boro, year, labor_force, employed, unemployed, unemployment_rate) 
   return(final_table)
 }
 
 
-bronx_income <- income14_18("14-18_income.xls", "Bronx")
-queens_income <- income14_18("14-18_income.xls", "Queens")
-brooklyn_income <- income14_18("14-18_income.xls", "Brooklyn")
-manhattan_income <- income14_18("14-18_income.xls", "Manhattan")
-staten_income <- income14_18("14-18_income.xls", "Staten Island")
+bronx_income <- clean_table(bronx)
+queens_income <- clean_table(queens)
+brooklyn_income <- clean_table(brooklyn)
+manhattan_income <- clean_table(manhattan)
+staten_income <- clean_table(staten)
 
 income_table <- Reduce(function(...) merge(..., all=T), list(bronx_income, queens_income, brooklyn_income, manhattan_income, staten_income))
 
@@ -72,19 +86,56 @@ income_table
 
 ## analysis
 ```{r}
-boxplot(unemployment_rate ~ boro,
+boxplot(unemployment_rate ~ arrest_boro,
         data = income_table,
         main = "Different boxplot for uneployment rate in the 5 counties over years",
         ylab = "Unemployment rate %",
         xlab = "",
         col = "cyan",
         border = "blue", 
-        las = 2,
-        names = c("Bronx", "Queens", "Brooklyn", "Manhattan", "Staten Island"))
+        las = 1)
 ```
+
+````{r}
+grouped_boro <- arrests_df %>% 
+  group_by(arrest_boro, year) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(year))
+grouped_boro
+
+## I need to change symbole to full name to be able to merge. 
+```
+
+```{r}
+merged <- dplyr::left_join(grouped_boro, income_table, by = "arrest_boro")
+merged
+```
+
 
 It seems that overall, Bronx had the highest unemployment rate among other areas. Let's invistigate the unemployment rate over the years and if it is related to crime rate for the same years?
 
+```{r}
+# Data Prep
+income_table$boro <- rownames(income_table)  # create new column for car names
+income_table$income_z <- round((income_table$unemployed - mean(income_table$unemployed))/sd(income_table$unemployed), 2)  # compute normalized mpg
+income_table$income_type <- ifelse(income_table$income_z < 0, "below", "above")  # above / below avg flag
+income_table <- income_table[order(income_table$income_z), ]  # sort
+income_table$boro <- factor(income_table$boro, levels = income_table$boro)  # convert to factor to retain sorted order in plot.
+
+# Diverging Barcharts
+ggplot(income_table, aes(x=boro, y=income_z, label=income_z)) + 
+  geom_bar(stat='identity', aes(fill=income_type), width=.5)  +
+  scale_fill_manual(name="Mileage", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#00ba38", "below"="#f8766d")) + 
+  labs(subtitle="Normalised mileage from 'mtcars'", 
+       title= "Diverging Bars") + 
+  coord_flip()
+```
+
+```{r}
+
+```
 
 
 ```{r}
