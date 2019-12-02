@@ -193,13 +193,15 @@ We can see that 25-44 age category is the most age category for committing a cri
 
 
 ```{r}
-treemap(murder_counts, #Your data frame object
+map <- murder_counts %>% filter(year == 2018)
+treemap(map, #Your data frame object
         index=c("perp_race","arrest_boro"),  #A list of your categorical variables
         vSize = "murder_counts",  #This is your quantitative variable
-        type="index", #Type sets the organization and color scheme of your treemap
+        type="categorical", #Type sets the organization and color scheme of your treemap
+        vColor = "arrest_boro", #Type sets the organization and color scheme of your treemap
         palette = "Set1",  #Select your color palette from the RColorBrewer presets or make your own.
-        title="Crime distribution committed by different races", #Customize your title
-        fontsize.title = 11 #Change the font size of the title
+        title="Crime distribution committed by different races - year 2018", #Customize your title
+        fontsize.title = 14 #Change the font size of the title
         ) 
 ```
 
