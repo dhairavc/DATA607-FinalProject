@@ -129,23 +129,25 @@ merged
 
 ```{r}
 # Data Prep
-income_table$boro <- rownames(income_table)  # create new column for car names
-income_table$income_z <- round((income_table$unemployed - mean(income_table$unemployed))/sd(income_table$unemployed), 2)  # compute normalized mpg
-income_table$income_type <- ifelse(income_table$income_z < 0, "below", "above")  # above / below avg flag
-income_table <- income_table[order(income_table$income_z), ]  # sort
-income_table$boro <- factor(income_table$boro, levels = income_table$boro)  # convert to factor to retain sorted order in plot.
-
+library(forcats)
+merged$boro <- rownames(merged)  # create new column for boro names
+merged$unemployment_z <- round((merged$avg_unemployment_rate - mean(merged$avg_unemployment_rate))/sd(merged$avg_unemployment_rate), 2)  # compute normalized 
+merged$unemployyment_type <- ifelse(merged$unemployment_z < 0, "below", "above")  # above / below avg flag
+merged <- merged[order(merged$unemployment_z), ]  # sort
+# merged$arrest_boro <- factor(merged$arrest_boro, levels = merged$arrest_boro)  # convert to factor to retain sorted order in plot.
+merged$arrest_boro <- factor(merged$arrest_boro, levels = rev(unique(merged$arrest_boro)), ordered=TRUE)
 # Diverging Barcharts
-ggplot(income_table, aes(x=boro, y=income_z, label=income_z)) + 
-  geom_bar(stat='identity', aes(fill=income_type), width=.5)  +
-  scale_fill_manual(name="Mileage", 
+ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) + 
+  geom_bar(stat='identity', aes(fill=unemployyment_type), width=.5)  +
+  scale_fill_manual(name="Unemployment", 
                     labels = c("Above Average", "Below Average"), 
                     values = c("above"="#00ba38", "below"="#f8766d")) + 
-  labs(subtitle="Normalised mileage from 'mtcars'", 
-       title= "Diverging Bars") + 
+  labs(subtitle="Normalised unemployment rate from 'merged'", 
+       title= "Diverging Bars of unemployment rates in boro") + 
   coord_flip()
 ```
 
+Brox seems to have the largest amount of unemployment rate which is above the average and in the same time it has the highest crime amonhest other counties. 
 
 
 ```{r}
