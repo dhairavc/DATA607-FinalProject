@@ -82,6 +82,7 @@ income_table <- Reduce(function(...) merge(..., all=T), list(bronx_income, queen
 income_table 
 ```
 
+  
 ## analysis
 ```{r}
 boxplot(unemployment_rate ~ arrest_boro,
@@ -94,17 +95,33 @@ boxplot(unemployment_rate ~ arrest_boro,
         las = 1)
 ```
 
-It seems that overall, Bronx had the highest unemployment rate among other areas. Let's invistigate the unemployment rate over the years and if it is related to crime rate for the same years?
+```{r}
+by_income <- income_table %>%
+  group_by(arrest_boro, year) %>%
+  dplyr::summarise(avg_unemployment_rate = max(unemployment_rate)) %>%
+  arrange(desc(year))
+by_income
+```
 
 ````{r}
 ## I need to change symbole to full name to be able to merge. 
 by_boro <- arrests_df
-by_boro$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan"))
+by_boro$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan")) 
 head(by_boro)
 ```
 
 ```{r}
-merged <- dplyr::left_join(by_boro, income_table, by = "arrest_boro")
+murder_counts <- by_boro %>%
+  group_by(arrest_boro, year) %>%
+  dplyr::summarise(murder_counts = n()) %>%
+  arrange(desc(year))
+murder_counts
+```
+
+```{r}
+merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)) %>%
+  na.omit() %>%
+  arrange(desc(year))
 merged
 ```
 
