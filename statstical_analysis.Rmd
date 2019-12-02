@@ -32,6 +32,7 @@ if (!require('tidyverse')) install.packages ('tidyverse')
 if (!require('ggplot2')) install.packages ('ggplot2')
 if (!require('readxl')) install.packages ('readxl')
 if (!require('plyr')) install.packages('plyr')
+if (!require('treemap')) install.packages('treemap')
 ```
 
 ```{r}
@@ -192,8 +193,6 @@ We can see that 25-44 age category is the most age category for committing a cri
 
 
 ```{r}
-library(treemap)
-
 treemap(murder_counts, #Your data frame object
         index=c("perp_race","arrest_boro"),  #A list of your categorical variables
         vSize = "murder_counts",  #This is your quantitative variable
