@@ -149,6 +149,49 @@ ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) +
 
 Brox seems to have the largest amount of unemployment rate which is above the average and in the same time it has the highest crime amonhest other counties. 
 
+```{r}
+# Data Prep
+library(forcats)
+merged$boro <- rownames(merged)  # create new column for boro names
+merged$crime_z <- round((merged$murder_counts - mean(merged$murder_counts))/sd(merged$murder_counts), 2)  # compute normalized 
+merged$murder_type <- ifelse(merged$crime_z < 0, "below", "above")  # above / below avg flag
+merged <- merged[order(merged$crime_z), ]  # sort
+# merged$arrest_boro <- factor(merged$arrest_boro, levels = merged$arrest_boro)  # convert to factor to retain sorted order in plot.
+merged$arrest_boro <- factor(merged$arrest_boro, levels = rev(unique(merged$arrest_boro)), ordered=TRUE)
+# Diverging Barcharts
+ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) + 
+  geom_bar(stat='identity', aes(fill=murder_type), width=.5)  +
+  scale_fill_manual(name="Crimes", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#00ba38", "below"="#f8766d")) + 
+  labs(subtitle="Normalised murders'", 
+       title= "Diverging Bars of number of murders per county") + 
+  coord_flip()
+```
+
+As illustrated from the diverge bar that **Bronx** also has above average number of crimes
+
+
+```{r}
+library(corrplot)
+library(RColorBrewer)
+mer_cor <- cor(merged[, sapply(merged, is.numeric)],
+    use = "complete.obs")
+corrplot(mer_cor, type="upper", order="hclust",
+         col=brewer.pal(n=8, name="RdYlBu"))
+```
+
+```{r}
+mcor<-round(cor(merged[, sapply(merged, is.numeric)],
+    use = "complete.obs"),2)
+mcor
+```
+
+
+
+
+
+
 
 ```{r}
 #arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
