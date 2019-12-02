@@ -173,25 +173,20 @@ As illustrated from the diverge bar that **Bronx** also has above average number
 
 
 ```{r}
-library(corrplot)
-library(RColorBrewer)
-mer_cor <- cor(merged[, sapply(merged, is.numeric)],
-    use = "complete.obs")
-corrplot(mer_cor, type="upper", order="hclust",
-         col=brewer.pal(n=8, name="RdYlBu"))
+library(ggplot2)
+theme_set(theme_classic())
+
+# Plot
+g <- ggplot(by_boro, aes(arrest_boro))
+g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
+    labs(title="Density plot", 
+         subtitle="Number of crimes per boro per age group distribution",
+         caption="Source: by_boro",
+         x="Borogh name",
+         fill="# cimes committed per age") 
 ```
 
-```{r}
-mcor<-round(cor(merged[, sapply(merged, is.numeric)],
-    use = "complete.obs"),2)
-mcor
-```
-
-
-
-
-
-
+We can see that 25-44 age category is the most age category for committing a crime. As demonestrated also, **Bronx** seems to have the highest density of crimes am
 
 ```{r}
 #arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
