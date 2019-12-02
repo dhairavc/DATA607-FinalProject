@@ -112,7 +112,7 @@ head(by_boro)
 
 ```{r}
 murder_counts <- by_boro %>%
-  group_by(arrest_boro, year) %>%
+  group_by(arrest_boro, year, perp_race) %>%
   dplyr::summarise(murder_counts = n()) %>%
   arrange(desc(year))
 murder_counts
@@ -141,7 +141,7 @@ ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) +
   geom_bar(stat='identity', aes(fill=unemployyment_type), width=.5)  +
   scale_fill_manual(name="Unemployment", 
                     labels = c("Above Average", "Below Average"), 
-                    values = c("above"="#00ba38", "below"="#f8766d")) + 
+                    values = c("above"="#f8766d", "below"="#00ba38")) + 
   labs(subtitle="Normalised unemployment rate from 'merged'", 
        title= "Diverging Bars of unemployment rates in boro") + 
   coord_flip()
@@ -163,7 +163,7 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
   geom_bar(stat='identity', aes(fill=murder_type), width=.5)  +
   scale_fill_manual(name="Crimes", 
                     labels = c("Above Average", "Below Average"), 
-                    values = c("above"="#00ba38", "below"="#f8766d")) + 
+                    values = c("above"="#f8766d", "below"="#00ba38")) + 
   labs(subtitle="Normalised murders'", 
        title= "Diverging Bars of number of murders per county") + 
   coord_flip()
@@ -187,6 +187,22 @@ g + geom_density(aes(fill=factor(age_group)), alpha=0.8) +
 ```
 
 We can see that 25-44 age category is the most age category for committing a crime. As demonestrated also, **Bronx** seems to have the highest density of crimes am
+
+
+
+
+```{r}
+library(treemap)
+
+treemap(murder_counts, #Your data frame object
+        index=c("perp_race","arrest_boro"),  #A list of your categorical variables
+        vSize = "murder_counts",  #This is your quantitative variable
+        type="index", #Type sets the organization and color scheme of your treemap
+        palette = "Set1",  #Select your color palette from the RColorBrewer presets or make your own.
+        title="Crime distribution committed by different races", #Customize your title
+        fontsize.title = 11 #Change the font size of the title
+        ) 
+```
 
 ```{r}
 #arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
