@@ -94,6 +94,8 @@ boxplot(unemployment_rate ~ arrest_boro,
         las = 1)
 ```
 
+It seems that overall, Bronx had the highest unemployment rate among other areas. Let's invistigate the unemployment rate over the years and if it is related to crime rate for the same years?
+
 ````{r}
 ## I need to change symbole to full name to be able to merge. 
 by_boro <- arrests_df
@@ -102,12 +104,11 @@ head(by_boro)
 ```
 
 ```{r}
-merged <- dplyr::left_join(grouped_boro, income_table, by = "arrest_boro")
+merged <- dplyr::left_join(by_boro, income_table, by = "arrest_boro")
 merged
 ```
 
 
-It seems that overall, Bronx had the highest unemployment rate among other areas. Let's invistigate the unemployment rate over the years and if it is related to crime rate for the same years?
 
 ```{r}
 # Data Prep
