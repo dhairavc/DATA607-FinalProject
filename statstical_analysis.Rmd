@@ -31,12 +31,10 @@ if (!require('RSocrata')) install.packages ('RSocrata')
 if (!require('tidyverse')) install.packages ('tidyverse')
 if (!require('ggplot2')) install.packages ('ggplot2')
 if (!require('readxl')) install.packages ('readxl')
-
+if (!require('plyr')) install.packages('plyr')
 ```
 
 ```{r}
-library("RSocrata")
-
 app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
 
 ## used SoQl to filter the imported columns and to extract years as an integer from the date
@@ -97,13 +95,10 @@ boxplot(unemployment_rate ~ arrest_boro,
 ```
 
 ````{r}
-grouped_boro <- arrests_df %>% 
-  group_by(arrest_boro, year) %>% 
-  summarize(count = n()) %>% 
-  arrange(desc(year))
-grouped_boro
-
 ## I need to change symbole to full name to be able to merge. 
+by_boro <- arrests_df
+by_boro$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan"))
+head(by_boro)
 ```
 
 ```{r}
@@ -133,9 +128,6 @@ ggplot(income_table, aes(x=boro, y=income_z, label=income_z)) +
   coord_flip()
 ```
 
-```{r}
-
-```
 
 
 ```{r}
