@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# An Socio-Economic Investigation into Crime
+# A Socio-Economic Investigation into Crime
 
 ## Introduction
 
