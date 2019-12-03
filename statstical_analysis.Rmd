@@ -9,7 +9,31 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Which variables we are interested in
+# An Socio-Economic Investigation into Crime
+
+## Introduction
+
+This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment crime data in NYC. We hoped that this investigation would reveal valuable information that could be used to formulate policy proposals.
+
+## Sources
+
+- [Unemployment data from the Department of Labor](https://www.labor.ny.gov/stats/nyc/)
+- [NYPD Complaint Data Historic](https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i56i)
+
+## Environment Setup
+
+```{r message=FALSE, warning=FALSE}
+if (!require('dplyr')) install.packages ('dplyr')
+if (!require('RSocrata')) install.packages ('RSocrata')
+if (!require('tidyverse')) install.packages ('tidyverse')
+if (!require('ggplot2')) install.packages ('ggplot2')
+if (!require('readxl')) install.packages ('readxl')
+if (!require('plyr')) install.packages('plyr')
+if (!require('treemap')) install.packages('treemap')
+if (!require('leaflet')) install.packages ('leaflet')
+```
+
+## NYPD Complaint Data Import via API
 
 variable         | description
 ---------------- | -----------
@@ -25,14 +49,12 @@ variable         | description
 `latitude`       | Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 `longitude`      | Longitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 
+Load the data into R using tthe RSocratat API.
 
 ```{r}
-library("RSocrata")
-
 app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
-
 ## used SoQl to filter the imported columns and to extract years as an integer from the date
-system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2017-01-01T00:00:00.000'&$select=date_trunc_ym(arrest_date) as month,ofns_desc,arrest_boro,age_group, perp_sex, perp_race",
+system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2014-01-01T00:00:00.000'&$select=date_extract_y(arrest_date) as year,ofns_desc,arrest_boro,age_group, perp_sex, perp_race, latitude, longitude",
                      app_token = app_token))
 ```
 
@@ -40,128 +62,248 @@ system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8
 head(arrests_df, 10)
 ```
 
+## 2014-2018 Unemployment Data Import via .csv
+
 ```{r}
-system.time(complain_df <- read.socrata("https://data.cityofnewyork.us/resource/5uac-w243.csv?"))
-# complain_df <- read.csv("NYPD_Complaint_Data_Historic.csv", header = TRUE, stringsAsFactors = FALSE)
+bronx_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=0&single=true&output=csv"
+queens_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1191228861&single=true&output=csv"
+brooklyn_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1054422077&single=true&output=csv"
+manhattan_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=652704166&single=true&output=csv"
+staten_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1149424970&single=true&output=csv"
+bronx <- read.csv(bronx_url, skip = 2, stringsAsFactors = FALSE) 
+queens <- read.csv(queens_url, skip = 2, stringsAsFactors = FALSE)
+brooklyn <- read.csv(brooklyn_url, skip = 2, stringsAsFactors = FALSE)
+manhattan <- read.csv(manhattan_url, skip = 2, stringsAsFactors = FALSE)
+staten <- read.csv(staten_url, skip = 2, stringsAsFactors = FALSE)
 ```
 
+# Data Transformation
 
 ```{r}
-head(complain_df)
+clean_table <- function (table) {
+  table_content <- table %>%
+    na.omit()
+  colnames(table_content) = c("arrest_boro","year","month","labor_force","employed","unemployed","unemployment_rate")
+  final_table <- table_content %>%
+    select(arrest_boro, year, labor_force, employed, unemployed, unemployment_rate) 
+  return(final_table)
+}
+bronx_income <- clean_table(bronx)
+queens_income <- clean_table(queens)
+brooklyn_income <- clean_table(brooklyn)
+manhattan_income <- clean_table(manhattan)
+staten_income <- clean_table(staten)
+income_table <- Reduce(function(...) merge(..., all=T), list(bronx_income, queens_income, brooklyn_income, manhattan_income, staten_income))
+income_table 
 ```
 
+## Data Analysis
 
 ```{r}
-library(tidyverse)
-# all character columns to factor to start regression analysis:
-arrests_factor <- arrests_df %>%
-  mutate_if(is.character, as.factor)
-str(arrests_factor)
-```
-
-
-```{r}
-## count arrests per year per month
-library(dplyr)
-number_of_arrests <- arrests_df %>%
-  mutate_if(is.character, as.factor) %>%
-  group_by(arrest_boro, ofns_desc, ) %>%
-  summarise(arrests_count = n())
-number_of_arrests
-```
-
-```{r}
-
-# spread age group
-age_spread <- number_of_arrests %>%
-  spread(key = age_group, value = arrests_count)
-age_spread
-```
-
-## Type of the study
-
-This study is observational study, we intended to 
-```{r}
-## build regression model
-# str(number_of_arrests)
-glm(arrests_counts ~ perp_sex, family="binomial", data = number_of_arrests)
-```
-
-```{r}
-# Check distribution of target variable arrest count
-# class(number_of_arrests$arrests_count)
-# hist(number_of_arrests$arrests_count)
-hist(number_of_arrests$arrests_count,
-     breaks=30,
-     col="blue",
-     border="white",
-     xlab="Median number of arrests",
-     ylab="Arrests count",
-     main="Histogram: Median arrests count during 2017 to 2018")
-```
-
-let's explore outliers 
-
-```{r}
-boxplot(number_of_arrests$arrests_count)
-```
-
-
-```{r}
-#arrests_df <- arrests_df %>% rename(date = month, offense = ofns_desc) 
-arrests_by_year <- arrests_df %>% separate(date, c("year", "month", "day"), sep = '-')
-grouped_offenses <- arrests_by_year %>% group_by(arrest_boro, ofns_desc) %>% summarize(count = n()) %>% arrange(desc(count))
+boxplot(unemployment_rate ~ arrest_boro,
+        data = income_table,
+        main = "Different boxplot for uneployment rate in the 5 counties over years",
+        ylab = "Unemployment rate %",
+        xlab = "",
+        col = "cyan",
+        border = "blue", 
+        las = 1)
 ```
 
 ```{r}
-grouped_boro <- arrests_by_year %>% group_by(arrest_boro) %>% summarize(count = n()) %>% arrange(desc(count))
+by_income <- income_table %>%
+  group_by(arrest_boro, year) %>%
+  dplyr::summarise(avg_unemployment_rate = max(unemployment_rate)) %>%
+  arrange(desc(year))
+by_income
+```
+
+````{r}
+## I need to change symbole to full name to be able to merge. 
+by_boro <- arrests_df
+by_boro$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan")) 
+head(by_boro)
+```
+```{r}
+murder_counts <- by_boro %>%
+  group_by(arrest_boro, year, perp_race) %>%
+  dplyr::summarise(murder_counts = n()) %>%
+  arrange(desc(year))
+murder_counts
+```
+```{r}
+merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)) %>%
+  na.omit() %>%
+  arrange(desc(year))
+merged
+```
+```{r}
+# Data Prep
+library(forcats)
+merged$boro <- rownames(merged)  # create new column for boro names
+merged$unemployment_z <- round((merged$avg_unemployment_rate - mean(merged$avg_unemployment_rate))/sd(merged$avg_unemployment_rate), 2)  # compute normalized 
+merged$unemployyment_type <- ifelse(merged$unemployment_z < 0, "below", "above")  # above / below avg flag
+merged <- merged[order(merged$unemployment_z), ]  # sort
+# merged$arrest_boro <- factor(merged$arrest_boro, levels = merged$arrest_boro)  # convert to factor to retain sorted order in plot.
+merged$arrest_boro <- factor(merged$arrest_boro, levels = rev(unique(merged$arrest_boro)), ordered=TRUE)
+# Diverging Barcharts
+ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) + 
+  geom_bar(stat='identity', aes(fill=unemployyment_type), width=.5)  +
+  scale_fill_manual(name="Unemployment", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#f8766d", "below"="#00ba38")) + 
+  labs(subtitle="Normalised unemployment rate from 'merged'", 
+       title= "Diverging Bars of unemployment rates in boro") + 
+  coord_flip()
+```
+The Bronx seems to have the largest amount of unemployment rate which is above the average and in the same time it has the highest crime amongst other counties. 
+```{r}
+# Data Prep
+library(forcats)
+merged$boro <- rownames(merged)  # create new column for boro names
+merged$crime_z <- round((merged$murder_counts - mean(merged$murder_counts))/sd(merged$murder_counts), 2)  # compute normalized 
+merged$murder_type <- ifelse(merged$crime_z < 0, "below", "above")  # above / below avg flag
+merged <- merged[order(merged$crime_z), ]  # sort
+# merged$arrest_boro <- factor(merged$arrest_boro, levels = merged$arrest_boro)  # convert to factor to retain sorted order in plot.
+merged$arrest_boro <- factor(merged$arrest_boro, levels = rev(unique(merged$arrest_boro)), ordered=TRUE)
+# Diverging Barcharts
+ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) + 
+  geom_bar(stat='identity', aes(fill=murder_type), width=.5)  +
+  scale_fill_manual(name="Crimes", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#f8766d", "below"="#00ba38")) + 
+  labs(subtitle="Normalised murders'", 
+       title= "Diverging Bars of number of murders per county") + 
+  coord_flip()
+```
+As illustrated from the diverge bar that **Bronx** also has above average number of crimes
+```{r}
+library(ggplot2)
+theme_set(theme_classic())
+# Plot
+g <- ggplot(by_boro, aes(arrest_boro))
+g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
+    labs(title="Density plot", 
+         subtitle="Number of crimes per boro per age group distribution",
+         caption="Source: by_boro",
+         x="Borough",
+         fill="# crimes committed per age group") 
+```
+We can see that the 25-44 age category is the most age category for committing a crime. As also demonstrated, the **Bronx** seems to have the highest density of crimes am
+```{r}
+map <- murder_counts %>% filter(year == 2018)
+treemap(map, #Your data frame object
+        index=c("perp_race","arrest_boro"),  #A list of your categorical variables
+        vSize = "murder_counts",  #This is your quantitative variable
+        type="categorical", #Type sets the organization and color scheme of your treemap
+        vColor = "arrest_boro", #Type sets the organization and color scheme of your treemap
+        palette = "Set1",  #Select your color palette from the RColorBrewer presets or make your own.
+        title="Crime distribution committed by different races - year 2018", #Customize your title
+        fontsize.title = 14 #Change the font size of the title
+        ) 
+```
+
+```{r echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
+
+arrests_map <- arrests_df %>% filter(year == 2018)
+
+singleicon <- makeIcon(iconUrl = "https://image.flaticon.com/icons/svg/1331/1331396.svg",
+                       iconWidth = 45,
+                       iconHeight = 45,
+                       iconAnchorX = 0,
+                       iconAnchorY = 0)
+
+leaflet(arrests_map, width = '100%') %>% addTiles() %>% 
+                                  addMarkers(lng = ~longitude, lat = ~latitude, 
+                                             clusterOptions = markerClusterOptions(), 
+                                             popup = paste("<b>Offense: </b>", arrests_map$ofns_desc, "<br/>",
+                                                           "<b>Age Group: </b>", arrests_map$age_group, "<br/>",
+                                                           "<b>Sex: </b>", arrests_map$perp_sex, "<br/>",
+                                                           "<b>Race: </b>", arrests_map$perp_race),
+                                             icon = singleicon)
+```
+
+
+
+Let's study the evolution of crime over the period of interest (2014-2018).
+
+```{r}
+grouped_boro <- arrests_df %>% 
+  group_by(year, arrest_boro) %>% 
+  dplyr::summarize(count = n()) %>% 
+  arrange(desc(count))
+```
+
+What the plot below reveals is that overall crime is decreasing for all boroughs of NYC. The data year over year is very similar, appearing to simply scale down over time. 
+
+What we can note as suprising is the fact that total crime between Manhattan and Brooklyn is at fairly similar levels. Total crime is aggregated without accounting for different types of crime so we will further our investigation by dissecting crime per borough.
+
+```{r}
+ggplot(grouped_boro, aes(x = reorder(year, -count), y = count, fill = arrest_boro)) + 
+  geom_bar(stat = 'identity', position = position_dodge()) +
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,120000,10000)) +
+  xlab("year") + ylab("total crime") + ggtitle("Crime by Borough Time Series") +
+  scale_fill_brewer(palette="Blues") + theme_minimal()
 ```
 
 ```{r}
-ggplot(grouped_boro, aes(x = reorder(arrest_boro, -count), y = count)) + 
-  geom_bar(stat = 'identity', fill= 'lightblue') + 
-  geom_text(aes(label=count), size = 5, hjust=1.2) +
-  coord_flip() + 
-  xlab("borough") + ylab("count") + ggtitle("Borough Aggregation") 
+grouped_offenses <- arrests_df %>% 
+  group_by(year, arrest_boro, ofns_desc) %>% 
+  dplyr::summarize(count = n())
+```
+
+```{r}
+t5 <- grouped_offenses %>% top_n(5)
 ```
 
 ```{r message=FALSE, warning=FALSE}
-ggplot(grouped_offenses %>% top_n(25), aes(x = reorder(ofns_desc, -count), y = count)) + 
-  geom_bar(stat = 'identity', fill= 'lightblue') + 
-  coord_flip() + 
-  xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
-  theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+ggplot(t5, aes(x = reorder(arrest_boro, -count), y = count, fill=ofns_desc)) + 
+  geom_bar(stat = 'identity', position = position_dodge()) +
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,80000,5000)) +
+  xlab("borough") + ylab("crime rate") + ggtitle("Most Common Crimes by Borough 2014-2018") +
+  scale_fill_brewer(palette="Blues") + theme_minimal()
 ```
+
+Perhaps we can comment on effective crime measures by looking at the least common crimes. **Fix this plot**
 
 ```{r message=FALSE, warning=FALSE}
 ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = count)) + 
   geom_bar(stat = 'identity', fill= 'lightblue') + 
   coord_flip() + 
-  xlab("offense") + ylab("count")  + ggtitle("Types of Crimes Aggregation") +
+  xlab("offense") + ylab("count")  + ggtitle("Least Common Crimes 2014-2018") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
 
+
 ```{r}
-drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(date, arrest_boro) %>% summarize(count = n())
+drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year, arrest_boro) %>% dplyr::summarize(count = n())
 ```
 
 ```{r}
-ggplot(drugs, aes(x = date, y = count, color = arrest_boro)) +
-  geom_point() + 
-  xlab("date") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
+ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
+  geom_jitter() + 
+  xlab("year") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+  
 ```
-
 ```{r message=FALSE, warning=FALSE}
-ggplot(arrests_by_year, aes(x = age_group, fill = perp_sex)) + 
+ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) + 
   geom_histogram(stat = "count", position=position_dodge()) +
   scale_fill_brewer(palette="Blues") + 
-  xlab("age") + ylab("count")  + ggtitle("Perpetrator Age Group and Gender Distribution") 
+  xlab("age group") + ylab("count")  + ggtitle("Perpetrator Age Group and Gender Distribution") +
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,7000000,100000))
+```
+
+```{r}
+grouped_arrests <- arrests_df %>% group_by(year, arrest_boro, ofns_desc, age_group, perp_sex, perp_race) %>% 
+  dplyr::summarize(count = n())
 ```
 
 
-
-
+```{r}
+m <- lm(count ~ arrest_boro + age_group + perp_sex + perp_race, data = grouped_arrests)
+summary(m)
+```
 
 
 
