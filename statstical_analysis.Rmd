@@ -31,6 +31,7 @@ if (!require('readxl')) install.packages ('readxl')
 if (!require('plyr')) install.packages('plyr')
 if (!require('treemap')) install.packages('treemap')
 if (!require('leaflet')) install.packages ('leaflet')
+if (!require('forcats')) install.packages('forcats')
 ```
 
 ## NYPD Complaint Data Import via API
@@ -160,7 +161,6 @@ ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) +
 The Bronx seems to have the largest amount of unemployment rate which is above the average and in the same time it has the highest crime amongst other counties. 
 ```{r}
 # Data Prep
-library(forcats)
 merged$boro <- rownames(merged)  # create new column for boro names
 merged$crime_z <- round((merged$murder_counts - mean(merged$murder_counts))/sd(merged$murder_counts), 2)  # compute normalized 
 merged$murder_type <- ifelse(merged$crime_z < 0, "below", "above")  # above / below avg flag
