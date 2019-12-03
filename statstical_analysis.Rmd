@@ -100,14 +100,15 @@ income_table
 ## Data Analysis
 
 ```{r}
-boxplot(unemployment_rate ~ arrest_boro,
-        data = income_table,
-        main = "Different boxplot for uneployment rate in the 5 counties over years",
-        ylab = "Unemployment rate %",
-        xlab = "",
-        col = "cyan",
-        border = "blue", 
-        las = 1)
+theme_set(theme_bw())
+ggplot(income_table, aes(x=arrest_boro, y=unemployment_rate)) + 
+    geom_boxplot(main = "Different boxplot for uneployment rate in the 5 counties over years",
+        ylab = "Unemployment rate %",	
+        xlab = "",	
+        col = "blue",	       
+        border = "blue") +
+facet_wrap(~year, scale="free") + 
+  theme(axis.text.x = element_text(angle=60, vjust = 0.6)) 
 ```
 
 ```{r}
