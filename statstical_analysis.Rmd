@@ -305,5 +305,51 @@ grouped_arrests <- arrests_df %>% group_by(year, arrest_boro, ofns_desc, age_gro
 m <- lm(count ~ arrest_boro + age_group + perp_sex + perp_race, data = grouped_arrests)
 summary(m)
 ```
+```{r}
+app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
+dat <- read.socrata("https://data.cityofnewyork.us/resource/qgea-i56i.csv?$where=cmplnt_fr_dt between  '2014-01-01T00:00:00' and '2018-12-31T00:00:00'&$select=date_extract_y(cmplnt_fr_dt) as year,ofns_desc,boro_nm,susp_age_group, susp_sex, susp_race",
+                     app_token = app_token)
+
+```
+
+```{r}
+res <- dat %>%
+  group_by(year, boro_nm) %>%
+  filter(boro_nm != "") %>%
+  dplyr::summarise(crimes = n()) 
+res
+```
+
+```{r}
+res %>% mutate_if(is.character, str_to_lower) -> res
+res
+```
+
+```{r}
+dat2 <- income_table
+
+dat2$unemployed <- as.numeric(gsub(",", "", dat2$unemployed))
+names(dat2)[1] <- "boro_nm"
+subet <- dat2[c(1:2,5)]
+by_unemployment <- subet %>%
+  group_by(year, boro_nm) %>%
+  dplyr::summarise(unemployed = round(mean(unemployed), 2)) %>%
+  mutate_if(is.character, str_to_lower)
+by_unemployment
+```
+
+```{r}
+joined <- Reduce(function(...) merge(..., all=T), list(res, by_unemployment)) %>%
+  na.omit()
+joined
+
+```
+
+```{r}
+## run simple linear regression
+model <- lm(crimes ~ unemployed, data = joined)
+```
+
+
 
 
