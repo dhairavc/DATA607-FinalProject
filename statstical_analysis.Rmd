@@ -33,6 +33,7 @@ if (!require('treemap')) install.packages('treemap')
 if (!require('leaflet')) install.packages ('leaflet')
 if (!require('forcats')) install.packages('forcats')
 if (!require('ggExtra')) install.packages('ggExtra')
+if (!require('GGally')) install.packages('GGally')
 ```
 
 ## NYPD Complaint Data Import via API
@@ -341,6 +342,14 @@ joined
 
 ```
 
+To decide whether we can make a predictive model, the first step is to see if there appears to be a relationship between our predictor and response variables (in this case crimes and unemployed). Let’s do some exploratory data visualization. I’ll use the `ggpairs()` function from the `GGally package` to create a plot matrix to see how the variables relate to one another.
+
+```{r correlation between crime and unemployed, message=FALSE, warning=FALSE}
+ggpairs(data=joined, columns = 3:4, title="Crimes employed data")
+```
+
+There is an important aspect that correlation doesn't imply causation, so I will use the regression to see if I can use this variable as a predictor. 
+
 ```{r explore-unemployed as predictor, message=FALSE, warning=FALSE}
 theme_set(theme_bw())  # pre-set the bw theme.
 
@@ -356,14 +365,25 @@ g <- ggplot(joined, aes(unemployed, crimes)) +
 ggMarginal(g, type = "boxplot", fill="transparent")
 ```
 
+
 ```{r unemployed regression, message=FALSE, warning=FALSE}
 m_unemployed <- lm(crimes ~ unemployed, data = joined)
 summary(m_unemployed)
 ```
 
+
 As shown by the simple linear regression, unemployment has an **R-squared  ~0.8** which makes it a better predictor for the crimes number. However, may be there are other factors that can be a confounding factors that increase crimes, for instance race or sex. 
 
-Now, I will inspect the other categorical independent variables associated with the number of commited murders. 
+Let's predict use linear prediction 
+
+```{r}
+predict(m_unemployed, data.frame(unemployed = 65783.31))
+# 137472.7  actual 140338 
+```
+
+so close number; however, we need more variables to make the model predict better.
+
+Now, I will inspect the other categorical independent variables associated with the number of commited murders.
 
 ```{r aggregate by category, message=FALSE, warning=FALSE}
 by_cat <- dat %>%
@@ -442,7 +462,41 @@ ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) +
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 ```
 
+Building the predictive model to predict crimes
 
 
+```{r}
+library(caret)
+fitControl <- trainControl(method = "repeatedcv",   
+                           number = 10,     # number of folds
+                           repeats = 10    # repeated ten times
+                           )    # Hyper-parameters random seach
+
+model.cv <- train(crimes ~ .,
+                  data = filtered,
+                  method = "ridge",
+                  trControl = fitControl,
+                  preProcess = c('scale','center'))
+model.cv
+
+```
+
+```{r}
+# Here I generate a dataframe with a column named lambda with 100 values that goes from 10^10 to 10^-2
+lambdaGrid <- expand.grid(lambda = 10^seq(10, -2, length=100))
+
+model.cv <- train(crimes ~ .,
+               data = filtered,
+               method = "ridge",
+               trControl = fitControl,
+               preProcess = c('scale', 'center'),
+               tuneGrid = lambdaGrid,   # Test all the lambda values in the lambdaGrid dataframe
+               na.action = na.omit)   # Ignore NA values
+
+model.cv
+```
+```{r}
+ggplot(varImp(model.cv))
+```
 
 
