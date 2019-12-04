@@ -364,38 +364,33 @@ by_cat <- dat %>%
   dplyr::summarise(crimes = n()) 
 by_cat
 ```
+
+Categorize age-group preparing for dummy variables
+
+```{r}
+dummy_df <- by_cat
+dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
+dummy_df
+```
+
 ```{r}
 #function to categorize and indicate the cofounder variable
 #
-# function to categorise
-getAge <- function(g1, g2, g3)
-{
-  average <- (g1 + g2 + g3)/3  
- 
-  perf <- sapply(average, function(x)
-  {
-    if (x < 10)
-    {
-      "Poor";
-    }
-    else if(x >= 10 & x < 15)
-    {
-      "Average";
-    }
-    else
-    {
-      "Excellent";
-    }
-    
-  })
- 
-  return (perf)
-}
+# function to categorise - dummy variables
 
-by_cat$boro_nm <- as.factor(by_cat$boro_nm)
-by_cat$susp_age_group <- as.factor(by_cat$susp_age_group)
-by_cat$susp_sex <- as.factor(by_cat$susp_sex)
-by_cat$susp_race <- as.factor(by_cat$susp_race)
+filtered <- dummy_df %>%
+  filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
+
+## change to factor level
+filtered$boro_nm <- as.factor(filtered$boro_nm)
+filtered$susp_age_group <- as.factor(filtered$susp_age_group)
+filtered$susp_sex <- as.factor(filtered$susp_sex)
+filtered$susp_race <- as.factor(filtered$susp_race)
+
+contrasts(filtered$susp_age_group)
+# reference variable is adult
+```
+
 
 # m <- lm(crimes ~ boro_nm + susp_age_group + susp_sex + susp_sex, data = by_cat)
 # summary(m)
