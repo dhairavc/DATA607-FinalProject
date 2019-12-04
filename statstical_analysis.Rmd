@@ -388,20 +388,44 @@ filtered$susp_sex <- as.factor(filtered$susp_sex)
 filtered$susp_race <- as.factor(filtered$susp_race)
 
 contrasts(filtered$susp_age_group)
-# reference variable is adult
-```
-
-
-# m <- lm(crimes ~ boro_nm + susp_age_group + susp_sex + susp_sex, data = by_cat)
-# summary(m)
+# reference variable is adult, we can rereference by using relevel(var, ref = "new_ref")
 ```
 
 ```{r}
-ggplot(data = by_cat, mapping = aes(x = susp_age_group, y = crimes)) + 
-  geom_boxplot()
-ggplot(data = by_cat, mapping = aes(x = susp_sex, y = crimes)) + 
-  geom_jitter(aes(colour = susp_sex))
-ggplot(data = by_cat, mapping = aes(x = susp_race, y = crimes)) + 
-  geom_jitter(aes(colour = susp_race))
+# contrasts(filtered$susp_sex) -> female is the reference
+filtered %>%
+  mutate(susp_sex = relevel(susp_sex, ref = "M")) -> filtered
+# contrasts(filtered$susp_sex)  - > now male is the ref
+
+m <- lm(crimes ~ susp_sex, data = filtered)
+summary(m)
 ```
+
+```{r}
+m2 <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
+anova(m2)
+```
+
+Taking other variables (susp_age_group, susp_race and boro_nm) into account, it can be seen that the categorical variable **susp_race** the most significant variable.
+
+```{r}
+summary(m2)
+```
+
+It can be seen that being **Black** is significantly associated with an average increase of 1454 in crime compared to other races.
+
+```{r}
+ggplot(data = filtered, mapping = aes(x = susp_age_group, y = crimes)) + 
+  geom_boxplot()
+ggplot(data = filtered, mapping = aes(x = susp_sex, y = crimes)) + 
+  geom_jitter(aes(colour = susp_sex))
+ggplot(data = filtered, mapping = aes(x = susp_race, y = crimes)) + 
+  geom_jitter(aes(colour = susp_race))
+ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) + 
+  geom_jitter(aes(colour = boro_nm))
+```
+
+
+
+
 
