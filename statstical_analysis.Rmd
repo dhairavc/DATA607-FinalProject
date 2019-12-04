@@ -321,8 +321,8 @@ res
 ```
 
 ```{r}
-res %>% mutate_if(is.character, str_to_lower) -> res
-res
+by_crime <- res %>% mutate_if(is.character, str_to_lower) 
+by_crime
 ```
 
 ```{r}
@@ -339,7 +339,7 @@ by_unemployment
 ```
 
 ```{r}
-joined <- Reduce(function(...) merge(..., all=T), list(res, by_unemployment)) %>%
+joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) %>%
   na.omit()
 joined
 
