@@ -32,6 +32,7 @@ if (!require('plyr')) install.packages('plyr')
 if (!require('treemap')) install.packages('treemap')
 if (!require('leaflet')) install.packages ('leaflet')
 if (!require('forcats')) install.packages('forcats')
+if (!require('ggExtra')) install.packages('ggExtra')
 ```
 
 ## NYPD Complaint Data Import via API
@@ -300,19 +301,14 @@ grouped_arrests <- arrests_df %>% group_by(year, arrest_boro, ofns_desc, age_gro
   dplyr::summarize(count = n())
 ```
 
-
-```{r}
-m <- lm(count ~ arrest_boro + age_group + perp_sex + perp_race, data = grouped_arrests)
-summary(m)
-```
-```{r}
+```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
 app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
 dat <- read.socrata("https://data.cityofnewyork.us/resource/qgea-i56i.csv?$where=cmplnt_fr_dt between  '2014-01-01T00:00:00' and '2018-12-31T00:00:00'&$select=date_extract_y(cmplnt_fr_dt) as year,ofns_desc,boro_nm,susp_age_group, susp_sex, susp_race",
                      app_token = app_token)
 
 ```
 
-```{r}
+```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
 res <- dat %>%
   group_by(year, boro_nm) %>%
   filter(boro_nm != "") %>%
@@ -320,12 +316,12 @@ res <- dat %>%
 res
 ```
 
-```{r}
+```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
 by_crime <- res %>% mutate_if(is.character, str_to_lower) 
 by_crime
 ```
 
-```{r}
+```{r filter by unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
 dat2 <- income_table
 
 dat2$unemployed <- as.numeric(gsub(",", "", dat2$unemployed))
@@ -338,26 +334,38 @@ by_unemployment <- subet %>%
 by_unemployment
 ```
 
-```{r}
+```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
 joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) %>%
   na.omit()
 joined
 
 ```
 
-```{r}
-## run simple linear regression
-model <- lm(crimes ~ unemployed, data = joined)
-summary(model)
-plot(joined$unemployed, joined$crimes, main = "Crimes commited as a function of unemployment",
-     xlab = "Unemployment", ylab = "crimes commited",
-     pch = 19, frame = FALSE)
-abline(model, col = "blue")
+```{r explore-unemployed as predictor, message=FALSE, warning=FALSE}
+theme_set(theme_bw())  # pre-set the bw theme.
+
+g <- ggplot(joined, aes(unemployed, crimes)) + 
+  geom_jitter() +
+  geom_smooth(method="lm") +
+  labs(subtitle="Crimes per unemployed: crimes vs unemployed numbers", 
+       y="Crimes", 
+       x="Unemployed", 
+       title="Scatterplot with overlapping points", 
+       caption="Source: joined")
+
+ggMarginal(g, type = "boxplot", fill="transparent")
 ```
 
-As shown by the simple linear regression, unemployment has an R-squared  ~0.8 which makes it a better predictor for the crimes number 
+```{r unemployed regression, message=FALSE, warning=FALSE}
+m_unemployed <- lm(crimes ~ unemployed, data = joined)
+summary(m_unemployed)
+```
 
-```{r}
+As shown by the simple linear regression, unemployment has an **R-squared  ~0.8** which makes it a better predictor for the crimes number. However, may be there are other factors that can be a confounding factors that increase crimes, for instance race or sex. 
+
+Now, I will inspect the other categorical independent variables associated with the number of commited murders. 
+
+```{r aggregate by category, message=FALSE, warning=FALSE}
 by_cat <- dat %>%
   group_by(year, boro_nm, susp_age_group, susp_sex, susp_race) %>%
   filter(boro_nm != "" & susp_age_group !="") %>%
@@ -367,13 +375,14 @@ by_cat
 
 Categorize age-group preparing for dummy variables
 
-```{r}
+```{r construct dummy variables, message=FALSE, warning=FALSE}
 dummy_df <- by_cat
 dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
 dummy_df
 ```
+Converting the independent variables into factors
 
-```{r}
+```{r convert variables into factors, message=FALSE, warning=FALSE}
 #function to categorize and indicate the cofounder variable
 #
 # function to categorise - dummy variables
@@ -391,38 +400,46 @@ contrasts(filtered$susp_age_group)
 # reference variable is adult, we can rereference by using relevel(var, ref = "new_ref")
 ```
 
-```{r}
+```{r change reference to M, message=FALSE, warning=FALSE}
 # contrasts(filtered$susp_sex) -> female is the reference
 filtered %>%
   mutate(susp_sex = relevel(susp_sex, ref = "M")) -> filtered
 # contrasts(filtered$susp_sex)  - > now male is the ref
 
-m <- lm(crimes ~ susp_sex, data = filtered)
-summary(m)
+m_sex <- lm(crimes ~ susp_sex, data = filtered)
+summary(m_sex) # no significance
 ```
 
-```{r}
-m2 <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
-anova(m2)
+```{r multi-reg for all variables-anova, message=FALSE, warning=FALSE}
+m_all <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
+anova(m_all)
 ```
 
 Taking other variables (susp_age_group, susp_race and boro_nm) into account, it can be seen that the categorical variable **susp_race** the most significant variable.
 
-```{r}
-summary(m2)
+```{r regression summary, warning=FALSE, message=FALSE}
+summary(m_all)
 ```
 
-It can be seen that being **Black** is significantly associated with an average increase of 1454 in crime compared to other races.
+It can be seen that being **Black** is significantly associated with an average increase of 1454 in crime compared to other races with **R-squared ~ 0.34**.
 
-```{r}
-ggplot(data = filtered, mapping = aes(x = susp_age_group, y = crimes)) + 
-  geom_boxplot()
-ggplot(data = filtered, mapping = aes(x = susp_sex, y = crimes)) + 
-  geom_jitter(aes(colour = susp_sex))
+Having some information shown on plots would give a good idea as to which categorical variables are good predictive features and can be used to build a machine learning model.
+
+Best plots for factor to factor variable comparison would be any of a jitter plot or heat map. I would use a jitter plot in this case for all of our factor-factor plots.
+
+```{r exploratory analysis, warning=FALSE, message=FALSE}
 ggplot(data = filtered, mapping = aes(x = susp_race, y = crimes)) + 
-  geom_jitter(aes(colour = susp_race))
+  geom_jitter(aes(colour = susp_race)) 
+
+ggplot(data = filtered, mapping = aes(x = susp_sex, y = crimes)) + 
+  geom_jitter(aes(colour = susp_sex)) 
+
+ggplot(data = filtered, mapping = aes(x = susp_age_group, y = crimes)) + 
+  geom_jitter(aes(colour = susp_age_group)) 
+
 ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) + 
-  geom_jitter(aes(colour = boro_nm))
+  geom_jitter(aes(colour = boro_nm)) + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))
 ```
 
 
