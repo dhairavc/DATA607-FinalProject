@@ -348,8 +348,65 @@ joined
 ```{r}
 ## run simple linear regression
 model <- lm(crimes ~ unemployed, data = joined)
+summary(model)
+plot(joined$unemployed, joined$crimes, main = "Crimes commited as a function of unemployment",
+     xlab = "Unemployment", ylab = "crimes commited",
+     pch = 19, frame = FALSE)
+abline(model, col = "blue")
 ```
 
+As shown by the simple linear regression, unemployment has an R-squared  ~0.8 which makes it a better predictor for the crimes number 
 
+```{r}
+by_cat <- dat %>%
+  group_by(year, boro_nm, susp_age_group, susp_sex, susp_race) %>%
+  filter(boro_nm != "" & susp_age_group !="") %>%
+  dplyr::summarise(crimes = n()) 
+by_cat
+```
+```{r}
+#function to categorize and indicate the cofounder variable
+#
+# function to categorise
+getAge <- function(g1, g2, g3)
+{
+  average <- (g1 + g2 + g3)/3  
+ 
+  perf <- sapply(average, function(x)
+  {
+    if (x < 10)
+    {
+      "Poor";
+    }
+    else if(x >= 10 & x < 15)
+    {
+      "Average";
+    }
+    else
+    {
+      "Excellent";
+    }
+    
+  })
+ 
+  return (perf)
+}
 
+by_cat$boro_nm <- as.factor(by_cat$boro_nm)
+by_cat$susp_age_group <- as.factor(by_cat$susp_age_group)
+by_cat$susp_sex <- as.factor(by_cat$susp_sex)
+by_cat$susp_race <- as.factor(by_cat$susp_race)
+
+# m <- lm(crimes ~ boro_nm + susp_age_group + susp_sex + susp_sex, data = by_cat)
+# summary(m)
+```
+
+```{r}
+ggplot(data = by_cat, mapping = aes(x = susp_age_group, y = crimes)) + 
+  geom_boxplot()
+ggplot(data = by_cat, mapping = aes(x = susp_sex, y = crimes)) + 
+  geom_jitter(aes(colour = susp_sex))
+ggplot(data = by_cat, mapping = aes(x = susp_race, y = crimes)) + 
+  geom_jitter(aes(colour = susp_race))
+```
 
