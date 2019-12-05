@@ -54,14 +54,14 @@ variable         | description
 Load the data into R using tthe RSocratat API.
 
 ```{r arrests, warning=FALSE, message=FALSE}
-source("data_sources.R", echo = T, prompt.echo = "", spaced = F)
+source("arrests_dataset.R", echo = F, prompt.echo = "", spaced = F)
 head(arrests_df, 10)
 ```
 
 ## 2014-2018 Unemployment Data Import via .csv
 
 ```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
-source("data_sources.R", echo = F, prompt.echo = "", spaced = F)
+source("unemployed_dataset.R", echo = F, prompt.echo = "", spaced = F)
 head(bronx)
 head(queens)
 head(brooklyn)
@@ -113,12 +113,11 @@ by_income
 
 ````{r}
 ## I need to change symbole to full name to be able to merge. 
-by_boro <- arrests_df
-by_boro$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan")) 
-head(by_boro)
+arrests_df$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan")) 
+head(arrests_df)
 ```
 ```{r}
-murder_counts <- by_boro %>%
+murder_counts <- arrests_df %>%
   group_by(arrest_boro, year, perp_race) %>%
   dplyr::summarise(murder_counts = n()) %>%
   arrange(desc(year))
@@ -132,7 +131,6 @@ merged
 ```
 ```{r}
 # Data Prep
-library(forcats)
 merged$boro <- rownames(merged)  # create new column for boro names
 merged$unemployment_z <- round((merged$avg_unemployment_rate - mean(merged$avg_unemployment_rate))/sd(merged$avg_unemployment_rate), 2)  # compute normalized 
 merged$unemployyment_type <- ifelse(merged$unemployment_z < 0, "below", "above")  # above / below avg flag
@@ -170,10 +168,9 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
 ```
 As illustrated from the diverge bar that **Bronx** also has above average number of crimes
 ```{r}
-library(ggplot2)
 theme_set(theme_classic())
 # Plot
-g <- ggplot(by_boro, aes(arrest_boro))
+g <- ggplot(arrests_df, aes(arrest_boro))
 g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
     labs(title="Density plot", 
          subtitle="Number of crimes per boro per age group distribution",
@@ -292,10 +289,8 @@ grouped_arrests <- arrests_df %>% group_by(year, arrest_boro, ofns_desc, age_gro
 ```
 
 ```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
-app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
-dat <- read.socrata("https://data.cityofnewyork.us/resource/qgea-i56i.csv?$where=cmplnt_fr_dt between  '2014-01-01T00:00:00' and '2018-12-31T00:00:00'&$select=date_extract_y(cmplnt_fr_dt) as year,ofns_desc,boro_nm,susp_age_group, susp_sex, susp_race",
-                     app_token = app_token)
-
+source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
+dat
 ```
 
 ```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
