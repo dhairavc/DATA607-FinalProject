@@ -378,7 +378,7 @@ Let's predict use linear prediction
 
 ```{r}
 predict(m_unemployed, data.frame(unemployed = 65783.31))
-# 137472.7  actual 140338 
+# 137472.7  actual 140338 from joined table
 ```
 
 so close number; however, we need more variables to make the model predict better.
@@ -416,18 +416,18 @@ filtered$susp_age_group <- as.factor(filtered$susp_age_group)
 filtered$susp_sex <- as.factor(filtered$susp_sex)
 filtered$susp_race <- as.factor(filtered$susp_race)
 
-contrasts(filtered$susp_age_group)
-# reference variable is adult, we can rereference by using relevel(var, ref = "new_ref")
+# contrasts(filtered$susp_race)
+# reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
 ```
 
 ```{r change reference to M, message=FALSE, warning=FALSE}
 # contrasts(filtered$susp_sex) -> female is the reference
-filtered %>%
-  mutate(susp_sex = relevel(susp_sex, ref = "M")) -> filtered
-# contrasts(filtered$susp_sex)  - > now male is the ref
+# filtered %>%
+#   mutate(susp_race = relevel(susp_race, ref = "BLACK")) -> filtered
+# contrasts(filtered$susp_race)  #- > now BLACK is the ref
 
-m_sex <- lm(crimes ~ susp_sex, data = filtered)
-summary(m_sex) # no significance
+m_race <- lm(crimes ~ susp_race, data = filtered)
+summary(m_race) # no significance
 ```
 
 ```{r multi-reg for all variables-anova, message=FALSE, warning=FALSE}
@@ -435,13 +435,13 @@ m_all <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = fil
 anova(m_all)
 ```
 
-Taking other variables (susp_age_group, susp_race and boro_nm) into account, it can be seen that the categorical variable **susp_race** the most significant variable.
+Taking other variables (susp_age_group, susp_sex, and boro_nm) into account, it can be seen that the categorical variable **boro_nm** the most significant variable **with lowest Sum Sq**.
 
 ```{r regression summary, warning=FALSE, message=FALSE}
 summary(m_all)
 ```
 
-It can be seen that being **Black** is significantly associated with an average increase of 1454 in crime compared to other races with **R-squared ~ 0.34**.
+It can be seen that being **Black** is significantly associated with an average increase of 1454 in crime compared to other races with **R-squared ~ 0.35**.
 
 Having some information shown on plots would give a good idea as to which categorical variables are good predictive features and can be used to build a machine learning model.
 
@@ -464,39 +464,59 @@ ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) +
 
 Building the predictive model to predict crimes
 
-
 ```{r}
-library(caret)
-fitControl <- trainControl(method = "repeatedcv",   
-                           number = 10,     # number of folds
-                           repeats = 10    # repeated ten times
-                           )    # Hyper-parameters random seach
-
-model.cv <- train(crimes ~ .,
-                  data = filtered,
-                  method = "ridge",
-                  trControl = fitControl,
-                  preProcess = c('scale','center'))
-model.cv
-
+# # round 1
+# crimeTrain <- createDataPartition(filtered$crimes, list = FALSE, times = 1, p = 0.67)
+# filtered <- filtered[crimeTrain,]
+# crimeTest <- filtered[-crimeTrain,]
+# 
+# crime_model <- train(crimes ~ ., data=filtered, method = "knn")
+# crimeTestPred <- predict(crime_model, crimeTest) 
+# newTest <- crimeTest
+# newTest$crimes <- as.factor(newTest$crimes)
+# newTest$year <- as.factor(newTest$year)
+# confusionMatrix(crimeTestPred, newTest$crimes)
+# #Accuracy -  0.5897
 ```
 
 ```{r}
-# Here I generate a dataframe with a column named lambda with 100 values that goes from 10^10 to 10^-2
-lambdaGrid <- expand.grid(lambda = 10^seq(10, -2, length=100))
-
-model.cv <- train(crimes ~ .,
-               data = filtered,
-               method = "ridge",
-               trControl = fitControl,
-               preProcess = c('scale', 'center'),
-               tuneGrid = lambdaGrid,   # Test all the lambda values in the lambdaGrid dataframe
-               na.action = na.omit)   # Ignore NA values
-
-model.cv
+# library(caret)
+# index = createDataPartition(y=filtered$susp_race, p=0.7, list=FALSE)
+# train.set = filtered[index, ]
+# test.set = filtered[-index, ]
+# dim(train.set)
+# dim(test.set)
 ```
+
+
+
 ```{r}
-ggplot(varImp(model.cv))
+# fitControl <- trainControl(method = "repeatedcv",   
+#                            number = 10,     # number of folds
+#                            repeats = 10,   # repeated ten times
+#                            search = "random")    # Hyper-parameters random seach
+# 
+# model.cv <- train(crimes ~ .,
+#                   data = filtered,
+#                   method = "ridge",
+#                   trControl = fitControl,
+#                   preProcess = c('scale','center'))
+# model.cv
+
 ```
 
 
+
+```{r}
+# crime.pred = predict(crime.tree, newdata = test.set)
+# table(crime.pred, test.set$susp_race)
+# error.rate = round(mean(crime.pred != test.set$susp_race),2)
+# error.rate
+```
+
+
+```{r}
+# plot(crime.tree$finalModel, uniform=TRUE,
+#      main="Classification Tree")
+# text(crime.tree$finalModel, use.n.=TRUE, all=TRUE, cex=.8)
+```
