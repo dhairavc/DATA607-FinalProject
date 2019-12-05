@@ -83,7 +83,7 @@ head(staten)
 
 # Data Transformation
 
-```{r}
+```{r clean unemployed, message=FALSE, warning=FALSE}
 clean_table <- function (table) {
   table_content <- table %>%
     na.omit()
@@ -103,7 +103,7 @@ income_table
 
 ## Data Analysis
 
-```{r}
+```{r explore income by boro, message=FALSE, warning=FALSE}
 theme_set(theme_bw())
 ggplot(income_table, aes(x=arrest_boro, y=unemployment_rate)) + 
     geom_boxplot(main = "Different boxplot for uneployment rate in the 5 counties over years",
@@ -115,7 +115,7 @@ facet_wrap(~year, scale="free") +
   theme(axis.text.x = element_text(angle=60, vjust = 0.6)) 
 ```
 
-```{r}
+```{r summarize avg unemployed, message=FALSE, warning=FALSE}
 by_income <- income_table %>%
   group_by(arrest_boro, year) %>%
   dplyr::summarise(avg_unemployment_rate = max(unemployment_rate)) %>%
@@ -123,25 +123,21 @@ by_income <- income_table %>%
 by_income
 ```
 
-````{r}
-## I need to change symbole to full name to be able to merge. 
-arrests_df$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan")) 
-head(arrests_df)
-```
-```{r}
+
+```{r aggregation, message=FALSE, warning=FALSE}
 murder_counts <- arrests_df %>%
   group_by(arrest_boro, year, perp_race) %>%
   dplyr::summarise(murder_counts = n()) %>%
   arrange(desc(year))
 murder_counts
 ```
-```{r}
+```{r merge murder and by income, message=FALSE, warning=FALSE}
 merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)) %>%
   na.omit() %>%
   arrange(desc(year))
 merged
 ```
-```{r}
+```{r normalize unemployed, message=FALSE, warning=FALSE}
 # Data Prep
 merged$boro <- rownames(merged)  # create new column for boro names
 merged$unemployment_z <- round((merged$avg_unemployment_rate - mean(merged$avg_unemployment_rate))/sd(merged$avg_unemployment_rate), 2)  # compute normalized 
@@ -160,7 +156,7 @@ ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) +
   coord_flip()
 ```
 The Bronx seems to have the largest amount of unemployment rate which is above the average and in the same time it has the highest crime amongst other counties. 
-```{r}
+```{r normalize crime, message=FALSE, warning=FALSE}
 # Data Prep
 merged$boro <- rownames(merged)  # create new column for boro names
 merged$crime_z <- round((merged$murder_counts - mean(merged$murder_counts))/sd(merged$murder_counts), 2)  # compute normalized 
@@ -179,7 +175,7 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
   coord_flip()
 ```
 As illustrated from the diverge bar that **Bronx** also has above average number of crimes
-```{r}
+```{r density plot for age, message=FALSE, warning=FALSE}
 theme_set(theme_classic())
 # Plot
 g <- ggplot(arrests_df, aes(arrest_boro))
@@ -191,7 +187,7 @@ g + geom_density(aes(fill=factor(age_group)), alpha=0.8) +
          fill="# crimes committed per age group") 
 ```
 We can see that the 25-44 age category is the most age category for committing a crime. As also demonstrated, the **Bronx** seems to have the highest density of crimes am
-```{r}
+```{r treemap for arrests, message=FALSE, warning=FALSE}
 map <- murder_counts %>% filter(year == 2018)
 treemap(map, #Your data frame object
         index=c("perp_race","arrest_boro"),  #A list of your categorical variables
@@ -203,7 +199,7 @@ treemap(map, #Your data frame object
         fontsize.title = 14 #Change the font size of the title
         ) 
 ```
-```{r echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
+```{r map for arrests,echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
 arrests_map <- arrests_df %>% filter(year == 2018)
 singleicon <- makeIcon(iconUrl = "https://image.flaticon.com/icons/svg/1331/1331396.svg",
                        iconWidth = 45,
@@ -221,7 +217,7 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
 ```
 Let's study the evolution of crime over the period of interest (2014-2018).
 
-```{r}
+```{r }
 grouped_boro <- arrests_df %>% 
   group_by(year, arrest_boro) %>% 
   dplyr::summarize(count = n()) %>% 
