@@ -2,15 +2,19 @@
 title: "statistical_exploratory_analysis"
 author: "Salma Elshahawy"
 date: "11/18/2019"
-output:
-  html_document: 
-    toc: yes
-    toc_collapsed: yes
-    toc_float: yes
+output: 
+  html_document:
+    theme: united
+    df_print: paged
+    toc: true
+    toc_float: 
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 ```
 
 # A Socio-Economic Investigation into Crime
@@ -34,16 +38,10 @@ We then merged the datasets to explore further and try to draw some final conslu
 
 ## Environment Setup
 
-```{r message=FALSE, warning=FALSE}
-if (!require('tidyverse')) install.packages ('tidyverse')
-if (!require('RSocrata')) install.packages ('RSocrata')
-if (!require('forcats')) install.packages ('forcats')
-if (!require('readxl')) install.packages ('readxl')
-if (!require('plyr')) install.packages('plyr')
-if (!require('treemap')) install.packages('treemap')
-if (!require('leaflet')) install.packages ('leaflet')
-#if (!require('ggigraphExtra')) devtools::install_github("cardiomoon/ggiraphExtra")
+```{r environment setup, message=FALSE, warning=FALSE}
+source("environment_setup.R", echo = T, prompt.echo = "", spaced = F)
 ```
+
 
 ## NYPD Arrests - Data Import via API
 
@@ -62,14 +60,8 @@ variable         | description
 
 Load the data into R using the RSocrata API.
 
-```{r}
-app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
-## used SoQl to filter the imported columns and to extract years as an integer from the date
-system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2014-01-01T00:00:00.000'&$select=date_extract_y(arrest_date) as year,ofns_desc,arrest_boro,age_group, perp_sex, perp_race, latitude, longitude",
-                     app_token = app_token))
-```
-
-```{r}
+```{r arrests, warning=FALSE, message=FALSE}
+source("data_sources.R", echo = T, prompt.echo = "", spaced = F)
 head(arrests_df, 10)
 ```
 
@@ -224,17 +216,13 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
 
 ## Labor Bureau - Data Import via .csv
 
-```{r}
-bronx_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=0&single=true&output=csv"
-queens_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1191228861&single=true&output=csv"
-brooklyn_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1054422077&single=true&output=csv"
-manhattan_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=652704166&single=true&output=csv"
-staten_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1149424970&single=true&output=csv"
-bronx <- read.csv(bronx_url, skip = 2, stringsAsFactors = FALSE) 
-queens <- read.csv(queens_url, skip = 2, stringsAsFactors = FALSE)
-brooklyn <- read.csv(brooklyn_url, skip = 2, stringsAsFactors = FALSE)
-manhattan <- read.csv(manhattan_url, skip = 2, stringsAsFactors = FALSE)
-staten <- read.csv(staten_url, skip = 2, stringsAsFactors = FALSE)
+```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
+source("data_sources.R", echo = F, prompt.echo = "", spaced = F)
+head(bronx)
+head(queens)
+head(brooklyn)
+head(manhattan)
+head(staten)
 ```
 
 # Labor Bureau - Data Transformation
@@ -309,7 +297,6 @@ ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) +
 The Bronx seems to have the largest amount of unemployment rate which is above the average and in the same time it has the highest crime amongst other counties. 
 ```{r}
 # Data Prep
-library(forcats)
 merged$boro <- rownames(merged)  # create new column for boro names
 merged$crime_z <- round((merged$murder_counts - mean(merged$murder_counts))/sd(merged$murder_counts), 2)  # compute normalized 
 merged$murder_type <- ifelse(merged$crime_z < 0, "below", "above")  # above / below avg flag
@@ -343,10 +330,212 @@ summary(m)
 plot(merged$murder_counts ~ merged$year)
 multiLines(m)
 ```
+
+```{r fetch complaindata 14-18,message=FALSE, warning=FALSE}
+source("data_sources.R", echo = F, prompt.echo = "", spaced = F)
+head(dat)
+```
+
+```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
+res <- dat %>%
+  group_by(year, boro_nm) %>%
+  filter(boro_nm != "") %>%
+  dplyr::summarise(crimes = n()) 
+res
+```
+
+```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
+by_crime <- res %>% mutate_if(is.character, str_to_lower) 
+by_crime
+```
+
+```{r filter by unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
+dat2 <- income_table
+
+dat2$unemployed <- as.numeric(gsub(",", "", dat2$unemployed))
+names(dat2)[1] <- "boro_nm"
+subet <- dat2[c(1:2,5)]
+by_unemployment <- subet %>%
+  group_by(year, boro_nm) %>%
+  dplyr::summarise(unemployed = round(mean(unemployed), 2)) %>%
+  mutate_if(is.character, str_to_lower)
+by_unemployment
+```
+
+```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
+joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) %>%
+  na.omit()
+joined
+
+```
+
+To decide whether we can make a predictive model, the first step is to see if there appears to be a relationship between our predictor and response variables (in this case crimes and unemployed). Let’s do some exploratory data visualization. I’ll use the `ggpairs()` function from the `GGally package` to create a plot matrix to see how the variables relate to one another.
+
+```{r correlation between crime and unemployed, message=FALSE, warning=FALSE}
+ggpairs(data=joined, columns = 3:4, title="Crimes employed data")
+```
+
+There is an important aspect that correlation doesn't imply causation, so I will use the regression to see if I can use this variable as a predictor. 
+
+```{r explore-unemployed as predictor, message=FALSE, warning=FALSE}
+theme_set(theme_bw())  # pre-set the bw theme.
+
+g <- ggplot(joined, aes(unemployed, crimes)) + 
+  geom_jitter() +
+  geom_smooth(method="lm") +
+  labs(subtitle="Crimes per unemployed: crimes vs unemployed numbers", 
+       y="Crimes", 
+       x="Unemployed", 
+       title="Scatterplot with overlapping points", 
+       caption="Source: joined")
+
+ggMarginal(g, type = "boxplot", fill="transparent")
+```
+
+
+```{r unemployed regression, message=FALSE, warning=FALSE}
+m_unemployed <- lm(crimes ~ unemployed, data = joined)
+summary(m_unemployed)
+```
+
+
+As shown by the simple linear regression, unemployment has an **R-squared  ~0.8** which makes it a better predictor for the crimes number. However, may be there are other factors that can be a confounding factors that increase crimes, for instance race or sex. 
+
+Let's predict use linear prediction 
+
+```{r}
+predict(m_unemployed, data.frame(unemployed = 65783.31))
+# 137472.7  actual 140338 from joined table
+```
+
+so close number; however, we need more variables to make the model predict better.
+
+Now, I will inspect the other categorical independent variables associated with the number of commited murders.
+
+```{r aggregate by category, message=FALSE, warning=FALSE}
+by_cat <- dat %>%
+  group_by(year, boro_nm, susp_age_group, susp_sex, susp_race) %>%
+  filter(boro_nm != "" & susp_age_group !="") %>%
+  dplyr::summarise(crimes = n()) 
+by_cat
+```
+
+Categorize age-group preparing for dummy variables
+
+```{r construct dummy variables, message=FALSE, warning=FALSE}
+dummy_df <- by_cat
+dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
+dummy_df
+
 ```{r}
 m2 <- lm(murder_counts ~ year, data=merged)
 #m2 <- lm(murder_counts ~ arrest_boro + year + perp_race + avg_unemployment_rate, data=merged)
 #ggPredict(m2,interactive = TRUE)
+
+```
+Converting the independent variables into factors
+
+```{r convert variables into factors, message=FALSE, warning=FALSE}
+#function to categorize and indicate the cofounder variable
+#
+# function to categorise - dummy variables
+
+filtered <- dummy_df %>%
+  filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
+
+## change to factor level
+filtered$boro_nm <- as.factor(filtered$boro_nm)
+filtered$susp_age_group <- as.factor(filtered$susp_age_group)
+filtered$susp_sex <- as.factor(filtered$susp_sex)
+filtered$susp_race <- as.factor(filtered$susp_race)
+
+# contrasts(filtered$susp_race)
+# reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
+```
+
+```{r change reference to M, message=FALSE, warning=FALSE}
+# contrasts(filtered$susp_sex) -> female is the reference
+# filtered %>%
+#   mutate(susp_race = relevel(susp_race, ref = "BLACK")) -> filtered
+# contrasts(filtered$susp_race)  #- > now BLACK is the ref
+
+m_race <- lm(crimes ~ susp_race, data = filtered)
+summary(m_race) # no significance
+```
+
+```{r multi-reg for all variables-anova, message=FALSE, warning=FALSE}
+m_all <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
+anova(m_all)
+```
+
+Taking other variables (susp_age_group, susp_sex, and boro_nm) into account, it can be seen that the categorical variable **boro_nm** the most significant variable **with lowest Sum Sq**.
+
+```{r regression summary, warning=FALSE, message=FALSE}
+summary(m_all)
+```
+
+It can be seen that being **Black** is significantly associated with an average increase of 1454 in crime compared to other races with **R-squared ~ 0.35**.
+
+Having some information shown on plots would give a good idea as to which categorical variables are good predictive features and can be used to build a machine learning model.
+
+Best plots for factor to factor variable comparison would be any of a jitter plot or heat map. I would use a jitter plot in this case for all of our factor-factor plots.
+
+```{r exploratory analysis, warning=FALSE, message=FALSE}
+ggplot(data = filtered, mapping = aes(x = susp_race, y = crimes)) + 
+  geom_jitter(aes(colour = susp_race)) 
+
+ggplot(data = filtered, mapping = aes(x = susp_sex, y = crimes)) + 
+  geom_jitter(aes(colour = susp_sex)) 
+
+ggplot(data = filtered, mapping = aes(x = susp_age_group, y = crimes)) + 
+  geom_jitter(aes(colour = susp_age_group)) 
+
+ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) + 
+  geom_jitter(aes(colour = boro_nm)) + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))
+```
+
+Building the predictive model to predict crimes
+
+
+```{r}
+# library(caret)
+# index = createDataPartition(y=filtered$susp_race, p=0.7, list=FALSE)
+# train.set = filtered[index, ]
+# test.set = filtered[-index, ]
+# dim(train.set)
+# dim(test.set)
 ```
 
 
+
+```{r}
+# fitControl <- trainControl(method = "repeatedcv",   
+#                            number = 10,     # number of folds
+#                            repeats = 10,   # repeated ten times
+#                            search = "random")    # Hyper-parameters random seach
+# 
+# model.cv <- train(crimes ~ .,
+#                   data = filtered,
+#                   method = "ridge",
+#                   trControl = fitControl,
+#                   preProcess = c('scale','center'))
+# model.cv
+
+```
+
+
+
+```{r}
+# crime.pred = predict(crime.tree, newdata = test.set)
+# table(crime.pred, test.set$susp_race)
+# error.rate = round(mean(crime.pred != test.set$susp_race),2)
+# error.rate
+```
+
+
+```{r}
+# plot(crime.tree$finalModel, uniform=TRUE,
+#      main="Classification Tree")
+# text(crime.tree$finalModel, use.n.=TRUE, all=TRUE, cex=.8)
+```
