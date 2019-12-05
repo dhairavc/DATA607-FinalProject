@@ -21,7 +21,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment crime data in NYC. We hoped that this investigation would reveal valuable information that could be used to formulate policy proposals.
+This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment and crime data in NYC. We hoped that this investigation would reveal valuable information that could be used to formulate policy proposals.	This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment crime data in NYC. We hoped that this investigation would reveal valuable information that could be used to formulate policy proposals.
+
+We used the following workflow for each dataset:	
+
+1. Data Import (API and .csv)	
+2. Data Transformation (handling missing data, tidying)	
+3. Data Exploration & Analysis (commentary, visualizations)	
+
+We then merged the datasets to explore further and try to draw some final conslusions.
 
 ## Sources
 
@@ -113,14 +121,11 @@ by_income
 
 ````{r}
 ## I need to change symbole to full name to be able to merge. 
-
 arrests_df$arrest_boro <- revalue(arrests_df$arrest_boro, c("B"="Bronx", "Q"="Queens", "K"="Brooklyn", "S"="Staten Island", "M"="Manhattan")) 
 head(arrests_df)
 ```
 ```{r}
 murder_counts <- arrests_df %>%
-
-
   group_by(arrest_boro, year, perp_race) %>%
   dplyr::summarise(murder_counts = n()) %>%
   arrange(desc(year))
@@ -171,7 +176,6 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
 ```
 As illustrated from the diverge bar that **Bronx** also has above average number of crimes
 ```{r}
-
 theme_set(theme_classic())
 # Plot
 g <- ggplot(arrests_df, aes(arrest_boro))
@@ -195,19 +199,13 @@ treemap(map, #Your data frame object
         fontsize.title = 14 #Change the font size of the title
         ) 
 ```
-
-
 ```{r echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
-
-
 arrests_map <- arrests_df %>% filter(year == 2018)
-
 singleicon <- makeIcon(iconUrl = "https://image.flaticon.com/icons/svg/1331/1331396.svg",
                        iconWidth = 45,
                        iconHeight = 45,
                        iconAnchorX = 0,
                        iconAnchorY = 0)
-
 leaflet(arrests_map, width = '100%') %>% addTiles() %>% 
                                   addMarkers(lng = ~longitude, lat = ~latitude, 
                                              clusterOptions = markerClusterOptions(), 
@@ -217,9 +215,6 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
                                                            "<b>Race: </b>", arrests_map$perp_race),
                                              icon = singleicon)
 ```
-
-
-
 Let's study the evolution of crime over the period of interest (2014-2018).
 
 ```{r}
@@ -240,17 +235,14 @@ ggplot(grouped_boro, aes(x = reorder(year, -count), y = count, fill = arrest_bor
   xlab("year") + ylab("total crime") + ggtitle("Crime by Borough Time Series") +
   scale_fill_brewer(palette="Blues") + theme_minimal()
 ```
-
 ```{r}
 grouped_offenses <- arrests_df %>% 
   group_by(year, arrest_boro, ofns_desc) %>% 
   dplyr::summarize(count = n())
 ```
-
 ```{r}
 t5 <- grouped_offenses %>% top_n(5)
 ```
-
 ```{r message=FALSE, warning=FALSE}
 ggplot(t5, aes(x = reorder(arrest_boro, -count), y = count, fill=ofns_desc)) + 
   geom_bar(stat = 'identity', position = position_dodge()) +
@@ -268,12 +260,9 @@ ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = 
   xlab("offense") + ylab("count")  + ggtitle("Least Common Crimes 2014-2018") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
-
-
 ```{r}
 drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year, arrest_boro) %>% dplyr::summarize(count = n())
 ```
-
 ```{r}
 ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   geom_jitter() + 
@@ -288,19 +277,17 @@ ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) +
   xlab("age group") + ylab("count")  + ggtitle("Perpetrator Age Group and Gender Distribution") +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,7000000,100000))
 ```
-
 ```{r}
 grouped_arrests <- arrests_df %>% group_by(year, arrest_boro, ofns_desc, age_group, perp_sex, perp_race) %>% 
   dplyr::summarize(count = n())
 ```
 
-```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
+## Statistical analysis 
 
+```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
 source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
 dat
-
 ```
-
 ```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
 res <- dat %>%
   group_by(year, boro_nm) %>%
@@ -308,15 +295,12 @@ res <- dat %>%
   dplyr::summarise(crimes = n()) 
 res
 ```
-
 ```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
 by_crime <- res %>% mutate_if(is.character, str_to_lower) 
 by_crime
 ```
-
 ```{r filter by unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
 dat2 <- income_table
-
 dat2$unemployed <- as.numeric(gsub(",", "", dat2$unemployed))
 names(dat2)[1] <- "boro_nm"
 subet <- dat2[c(1:2,5)]
@@ -326,14 +310,11 @@ by_unemployment <- subet %>%
   mutate_if(is.character, str_to_lower)
 by_unemployment
 ```
-
 ```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
 joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) %>%
   na.omit()
 joined
-
 ```
-
 To decide whether we can make a predictive model, the first step is to see if there appears to be a relationship between our predictor and response variables (in this case crimes and unemployed). Let’s do some exploratory data visualization. I’ll use the `ggpairs()` function from the `GGally package` to create a plot matrix to see how the variables relate to one another.
 
 ```{r correlation between crime and unemployed, message=FALSE, warning=FALSE}
@@ -344,7 +325,6 @@ There is an important aspect that correlation doesn't imply causation, so I will
 
 ```{r explore-unemployed as predictor, message=FALSE, warning=FALSE}
 theme_set(theme_bw())  # pre-set the bw theme.
-
 g <- ggplot(joined, aes(unemployed, crimes)) + 
   geom_jitter() +
   geom_smooth(method="lm") +
@@ -353,30 +333,20 @@ g <- ggplot(joined, aes(unemployed, crimes)) +
        x="Unemployed", 
        title="Scatterplot with overlapping points", 
        caption="Source: joined")
-
 ggMarginal(g, type = "boxplot", fill="transparent")
 ```
-
-
 ```{r unemployed regression, message=FALSE, warning=FALSE}
 m_unemployed <- lm(crimes ~ unemployed, data = joined)
 summary(m_unemployed)
 ```
-
-
 As shown by the simple linear regression, unemployment has an **R-squared  ~0.8** which makes it a better predictor for the crimes number. However, may be there are other factors that can be a confounding factors that increase crimes, for instance race or sex. 
-
 Let's predict use linear prediction 
-
 ```{r}
 predict(m_unemployed, data.frame(unemployed = 65783.31))
 # 137472.7  actual 140338 from joined table
 ```
-
 so close number; however, we need more variables to make the model predict better.
-
 Now, I will inspect the other categorical independent variables associated with the number of commited murders.
-
 ```{r aggregate by category, message=FALSE, warning=FALSE}
 by_cat <- dat %>%
   group_by(year, boro_nm, susp_age_group, susp_sex, susp_race) %>%
@@ -384,78 +354,58 @@ by_cat <- dat %>%
   dplyr::summarise(crimes = n()) 
 by_cat
 ```
-
 Categorize age-group preparing for dummy variables
-
 ```{r construct dummy variables, message=FALSE, warning=FALSE}
 dummy_df <- by_cat
 dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
 dummy_df
 ```
 Converting the independent variables into factors
-
 ```{r convert variables into factors, message=FALSE, warning=FALSE}
 #function to categorize and indicate the cofounder variable
 #
 # function to categorise - dummy variables
-
 filtered <- dummy_df %>%
   filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
-
 ## change to factor level
 filtered$boro_nm <- as.factor(filtered$boro_nm)
 filtered$susp_age_group <- as.factor(filtered$susp_age_group)
 filtered$susp_sex <- as.factor(filtered$susp_sex)
 filtered$susp_race <- as.factor(filtered$susp_race)
-
 # contrasts(filtered$susp_race)
 # reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
 ```
-
 ```{r change reference to M, message=FALSE, warning=FALSE}
 # contrasts(filtered$susp_sex) -> female is the reference
 # filtered %>%
 #   mutate(susp_race = relevel(susp_race, ref = "BLACK")) -> filtered
 # contrasts(filtered$susp_race)  #- > now BLACK is the ref
-
 m_race <- lm(crimes ~ susp_race, data = filtered)
 summary(m_race) # no significance
 ```
-
 ```{r multi-reg for all variables-anova, message=FALSE, warning=FALSE}
 m_all <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
 anova(m_all)
 ```
-
 Taking other variables (susp_age_group, susp_sex, and boro_nm) into account, it can be seen that the categorical variable **boro_nm** the most significant variable **with lowest Sum Sq**.
-
 ```{r regression summary, warning=FALSE, message=FALSE}
 summary(m_all)
 ```
-
 It can be seen that being **Black** is significantly associated with an average increase of 1454 in crime compared to other races with **R-squared ~ 0.35**.
-
 Having some information shown on plots would give a good idea as to which categorical variables are good predictive features and can be used to build a machine learning model.
-
 Best plots for factor to factor variable comparison would be any of a jitter plot or heat map. I would use a jitter plot in this case for all of our factor-factor plots.
-
 ```{r exploratory analysis, warning=FALSE, message=FALSE}
 ggplot(data = filtered, mapping = aes(x = susp_race, y = crimes)) + 
   geom_jitter(aes(colour = susp_race)) 
-
 ggplot(data = filtered, mapping = aes(x = susp_sex, y = crimes)) + 
   geom_jitter(aes(colour = susp_sex)) 
-
 ggplot(data = filtered, mapping = aes(x = susp_age_group, y = crimes)) + 
   geom_jitter(aes(colour = susp_age_group)) 
-
 ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) + 
   geom_jitter(aes(colour = boro_nm)) + 
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 ```
-
 Building the predictive model to predict crimes
-
 ```{r}
 # # round 1
 # crimeTrain <- createDataPartition(filtered$crimes, list = FALSE, times = 1, p = 0.67)
@@ -470,7 +420,6 @@ Building the predictive model to predict crimes
 # confusionMatrix(crimeTestPred, newTest$crimes)
 # #Accuracy -  0.5897
 ```
-
 ```{r}
 # library(caret)
 # index = createDataPartition(y=filtered$susp_race, p=0.7, list=FALSE)
@@ -479,9 +428,6 @@ Building the predictive model to predict crimes
 # dim(train.set)
 # dim(test.set)
 ```
-
-
-
 ```{r}
 # fitControl <- trainControl(method = "repeatedcv",   
 #                            number = 10,     # number of folds
@@ -494,19 +440,13 @@ Building the predictive model to predict crimes
 #                   trControl = fitControl,
 #                   preProcess = c('scale','center'))
 # model.cv
-
 ```
-
-
-
 ```{r}
 # crime.pred = predict(crime.tree, newdata = test.set)
 # table(crime.pred, test.set$susp_race)
 # error.rate = round(mean(crime.pred != test.set$susp_race),2)
 # error.rate
 ```
-
-
 ```{r}
 # plot(crime.tree$finalModel, uniform=TRUE,
 #      main="Classification Tree")
