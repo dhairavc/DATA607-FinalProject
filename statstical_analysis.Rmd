@@ -2,7 +2,15 @@
 title: "statistical_exploratory_analysis"
 author: "Salma Elshahawy"
 date: "11/18/2019"
-output: html_document
+output: 
+  html_document:
+    theme: united
+    df_print: paged
+    toc: true
+    toc_float: 
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true
 ---
 
 ```{r setup, include=FALSE}
@@ -22,19 +30,10 @@ This project provided us with the opportunity of showcasing many of the skills w
 
 ## Environment Setup
 
-```{r message=FALSE, warning=FALSE}
-if (!require('dplyr')) install.packages ('dplyr')
-if (!require('RSocrata')) install.packages ('RSocrata')
-if (!require('tidyverse')) install.packages ('tidyverse')
-if (!require('ggplot2')) install.packages ('ggplot2')
-if (!require('readxl')) install.packages ('readxl')
-if (!require('plyr')) install.packages('plyr')
-if (!require('treemap')) install.packages('treemap')
-if (!require('leaflet')) install.packages ('leaflet')
-if (!require('forcats')) install.packages('forcats')
-if (!require('ggExtra')) install.packages('ggExtra')
-if (!require('GGally')) install.packages('GGally')
+```{r environment setup, message=FALSE, warning=FALSE}
+source("environment_setup.R", echo = T, prompt.echo = "", spaced = F)
 ```
+
 
 ## NYPD Complaint Data Import via API
 
@@ -54,30 +53,20 @@ variable         | description
 
 Load the data into R using tthe RSocratat API.
 
-```{r}
-app_token <- "Fm6ShrlqYtvnNx0IB9N0EyrfT"
-## used SoQl to filter the imported columns and to extract years as an integer from the date
-system.time(arrests_df <- read.socrata("https://data.cityofnewyork.us/resource/8h9b-rp9u.csv?$where=arrest_date >= '2014-01-01T00:00:00.000'&$select=date_extract_y(arrest_date) as year,ofns_desc,arrest_boro,age_group, perp_sex, perp_race, latitude, longitude",
-                     app_token = app_token))
-```
-
-```{r}
+```{r arrests, warning=FALSE, message=FALSE}
+source("data_sources.R", echo = T, prompt.echo = "", spaced = F)
 head(arrests_df, 10)
 ```
 
 ## 2014-2018 Unemployment Data Import via .csv
 
-```{r}
-bronx_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=0&single=true&output=csv"
-queens_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1191228861&single=true&output=csv"
-brooklyn_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1054422077&single=true&output=csv"
-manhattan_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=652704166&single=true&output=csv"
-staten_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpI6SZYx2-kMLhQbprpfgdL0qp0gY4He-VgCWlLpAMkRsXFx-7T7DcIr-XADJCa6a_3O2tigtla2EM/pub?gid=1149424970&single=true&output=csv"
-bronx <- read.csv(bronx_url, skip = 2, stringsAsFactors = FALSE) 
-queens <- read.csv(queens_url, skip = 2, stringsAsFactors = FALSE)
-brooklyn <- read.csv(brooklyn_url, skip = 2, stringsAsFactors = FALSE)
-manhattan <- read.csv(manhattan_url, skip = 2, stringsAsFactors = FALSE)
-staten <- read.csv(staten_url, skip = 2, stringsAsFactors = FALSE)
+```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
+source("data_sources.R", echo = F, prompt.echo = "", spaced = F)
+head(bronx)
+head(queens)
+head(brooklyn)
+head(manhattan)
+head(staten)
 ```
 
 # Data Transformation
