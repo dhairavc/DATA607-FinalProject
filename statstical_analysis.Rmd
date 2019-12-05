@@ -31,6 +31,10 @@ We used the following workflow for each dataset:
 
 We then merged the datasets to explore further and try to draw some final conslusions.
 
+## Work flow-chart
+
+![workflowchart](/Users/salmaelshahawy/Desktop/DATA607-FinalProject/workflowchart.png)
+
 ## Sources
 
 - [Unemployment data from the Department of Labor](https://www.labor.ny.gov/stats/nyc/)
