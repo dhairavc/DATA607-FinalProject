@@ -204,11 +204,6 @@ ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,7000000,100000))
 ```
 
-```{r}
-#grouped_arrests <- arrests_df %>% group_by(year, arrest_boro, ofns_desc, age_group, perp_sex, perp_race) %>% 
-#  dplyr::summarize(count = n())
-```
-
 This interactive map will let you explore the distribution of crime geographically.
 
 ```{r map for arrests,echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
