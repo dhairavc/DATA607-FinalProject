@@ -72,6 +72,19 @@ head(arrests_df, 10)
 
 ## NYPD Arrests - Data Transformation
 
+Rename the borough letters to proper names.
+
+```{r}
+arrests_df$arrest_boro <- revalue(arrests_df$arrest_boro, c("Q"="Queens", "K"="Brooklyn", "M"="Manhatttan", "S"="Staten Island", "B" = "Bronx")) 
+```
+
+Remove missing values where no offense description is recorded.
+
+```{r}
+arrests_df <- arrests_df %>% filter(ofns_desc != "")
+```
+
+
 ```{r aggregation, message=FALSE, warning=FALSE}
 murder_counts <- arrests_df %>%
   group_by(arrest_boro, year, perp_race) %>%
@@ -134,7 +147,7 @@ drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year
 ```
 ```{r}
 ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
-  geom_jitter() + 
+  geom_line() + 
   xlab("year") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
   
