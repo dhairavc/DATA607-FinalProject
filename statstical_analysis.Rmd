@@ -229,6 +229,8 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
 
 # Labor Bureau
 
+To explore the socio-economic aspect of the question, we dig into data from the Labor Bureau. In particular, we will be looking at unemployment data.
+
 ## Labor Bureau - Data Import via .csv
 
 ```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
@@ -283,6 +285,8 @@ by_income
 ```
 
 # Combined Datasets
+
+After understanding our datasets individually, we merged them into a single data frame based on the variable that were shared between the two sources, namely `year` and `arrest_boro`. This allowed us to extend our analysis to the variables in the combined dataset and to study how they behave in relation to each other.
 
 ```{r merge murder and by income, message=FALSE, warning=FALSE}
 merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)) %>%
@@ -354,6 +358,8 @@ treemap(map, #Your data frame object
 ```
 
 # Statistical Analysis & Modeling
+
+The final task in this project was to use our combined data in a linear regression modeling exercise to understand the relationship between the variables. In this process we were able to identify which variables are the greatest predictors of the number of crimes commited.
 
 ```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
 source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
