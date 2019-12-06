@@ -133,10 +133,11 @@ ggplot(t5, aes(x = reorder(arrest_boro, -count), y = count, fill=ofns_desc)) +
   scale_fill_brewer(palette="Blues") + theme_minimal()
 ```
 
-Perhaps we can comment on effective crime measures by looking at the least common crimes. **Fix this plot**
+Perhaps we can comment on effective crime measures by looking at the least common crimes.
 
 ```{r message=FALSE, warning=FALSE}
-ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = count)) + 
+
+ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count, FUN = sum), y = count)) + 
   geom_bar(stat = 'identity', fill= 'lightblue') + 
   coord_flip() + 
   xlab("offense") + ylab("count")  + ggtitle("Least Common Crimes 2014-2018") +
