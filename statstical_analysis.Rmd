@@ -19,6 +19,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # A Socio-Economic Investigation into Crime
 
+Presented by:
+- Salma Elshahawy [@salma71](https://github.com/salma71)
+- Dhairav Chhatbar [@dhairavc](https://github.com/dhairavc)
+- Mael Illien [@maelillien](https://github.com/maelillien) 
+
 ## Introduction
 
 This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment and crime data in NYC. We hoped that this investigation would reveal valuable information that could be used to formulate policy proposals.	This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment crime data in NYC. We hoped that this investigation would reveal valuable information that could be used to formulate policy proposals.
@@ -50,6 +55,11 @@ source("environment_setup.R", echo = T, prompt.echo = "", spaced = F)
 
 ## NYPD Arrests - Data Import via API
 
+We will start with the NYPD Arrests Data (Historic) data from NYC Open Data found below and conduct some exploratory data analysis to find out how arrests are distributed in general. We will explore trends like for example investigating seasonality trends or trends in particular kinds of arrest or by boroughs.
+
+There are 4.8M rows, there are 18 columns and each row is an arrest.
+
+
 variable         | description
 ---------------- | -----------
 `arrest_date`    | Exact date of arrest for the reported event.
@@ -74,13 +84,13 @@ head(arrests_df, 10)
 
 Rename the borough letters to proper names.
 
-```{r}
+```{r change boro names, message=FALSE, warning=FALSE}
 arrests_df$arrest_boro <- revalue(arrests_df$arrest_boro, c("Q"="Queens", "K"="Brooklyn", "M"="Manhatttan", "S"="Staten Island", "B" = "Bronx")) 
 ```
 
 Remove missing values where no offense description is recorded.
 
-```{r}
+```{r remove empty ofns, warning=FALSE, message=FALSE}
 arrests_df <- arrests_df %>% filter(ofns_desc != "")
 ```
 
@@ -94,7 +104,7 @@ murder_counts <- arrests_df %>%
 murder_counts
 ```
 
-```{r }
+```{r arrests counts, message=FALSE, warning=FALSE}
 # get the count of arrests per year, by borough
 grouped_boro <- arrests_df %>% 
   group_by(year, arrest_boro) %>% 
@@ -102,7 +112,7 @@ grouped_boro <- arrests_df %>%
   arrange(desc(count))
 ```
 
-```{r}
+```{r ofnse counts, message=FALSE, warning=FALSE}
 # get the count of offenses per year, by borough
 grouped_offenses <- arrests_df %>% 
   group_by(year, arrest_boro, ofns_desc) %>% 
@@ -110,12 +120,12 @@ grouped_offenses <- arrests_df %>%
   arrange(desc(count))
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r top five ofnse, message=FALSE, warning=FALSE}
 # get the top five offense per borough
 t5 <- grouped_offenses %>% top_n(5)
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r counts ofns overall, message=FALSE, warning=FALSE}
 # get the counts of offenses overall
 crime_counts <- arrests_df %>% 
   group_by(ofns_desc) %>% 
@@ -123,7 +133,7 @@ crime_counts <- arrests_df %>%
   arrange(desc(count))
 ```
 
-```{r}
+```{r arrests count relative to dangerous drugs, message=FALSE, warning=FALSE}
 # get the count of arrests related to dangerous drugs by year, by borough
 drugs <- arrests_df %>% 
   filter(ofns_desc == 'DANGEROUS DRUGS') %>% 
@@ -139,7 +149,7 @@ Let's study the evolution of crime over the period of interest (2014-2018).
 
 What the plot below reveals is that overall crime is decreasing for all boroughs of NYC. The data year over year is very similar, appearing to simply scale down over time. 
 
-```{r, echo=FALSE}
+```{r crimes by boro time series, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(grouped_boro, aes(x = reorder(year, -count), y = count, fill = arrest_boro)) + 
   geom_bar(stat = 'identity', position = position_dodge()) +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,120000,10000)) +
@@ -151,7 +161,7 @@ What we can note as suprising is the fact that total crime between Manhattan and
 
 Here is a plot of the top 10 most common crimes for the 2014-2018 period across all boroughs. We learn that dangerous drugs related offenses are the most prevailent followed by 3rd degree assaults.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r most common crimes, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(crime_counts %>% top_n(10), aes(x = reorder(ofns_desc, -count), y = count)) + 
   geom_bar(stat = 'identity', fill= 'lightblue') + 
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,300000,50000)) +
@@ -163,7 +173,7 @@ ggplot(crime_counts %>% top_n(10), aes(x = reorder(ofns_desc, -count), y = count
 
 A peek at the bottom 10 crimes for the same period reveals somewhat unexpected crimes like disruption of a religious service. It is interesting to note that while dangerous drugs offenses are the most common crime, only 1 person was arrested for being under the influence of drugs.
 
-```{r message=FALSE, warning=FALSE, echo=FALSE}
+```{r least commo crimes, message=FALSE, warning=FALSE, echo=FALSE}
 ggplot(crime_counts %>% top_n(-10), aes(x = reorder(ofns_desc, -count), y = count)) + 
   geom_bar(stat = 'identity', fill= 'lightblue') + 
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,75,5)) +
@@ -175,7 +185,7 @@ ggplot(crime_counts %>% top_n(-10), aes(x = reorder(ofns_desc, -count), y = coun
 
 Following from  the exploration above, we take a deeper look at the most common crimes by borough. On the plot below, we once again see that how drug related offenses are the most common crimes and that this is consistent across boroughs. We notice that while Brooklyn and Manhattan had the most crimes, the Bronx captures the most drug arrests.
 
-```{r message=FALSE, warning=FALSE, echo=FALSE}
+```{r top 5 crimes by boro, message=FALSE, warning=FALSE, echo=FALSE}
 ggplot(t5, aes(x = reorder(arrest_boro, -count), y = count, fill=ofns_desc)) + 
   geom_bar(stat = 'identity', position = position_dodge()) +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,80000,5000)) +
@@ -185,7 +195,7 @@ ggplot(t5, aes(x = reorder(arrest_boro, -count), y = count, fill=ofns_desc)) +
 
 The plot below explores that relationship over time for each borough. We observe that similarly to crime in general, drug related arrests are going down.
 
-```{r echo=FALSE}
+```{r dangerous drug crime, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   geom_line() + 
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,30000,2500)) +
@@ -196,7 +206,7 @@ ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
 
 We continue investigating the demographics and take a look at the distribution of crime by gender. Male adults between the ages of 25-44 remain the most common perpetrators. 
 
-```{r message=FALSE, warning=FALSE, echo=FALSE}
+```{r age group gender distribution, message=FALSE, warning=FALSE, echo=FALSE}
 ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) + 
   geom_histogram(stat = "count", position=position_dodge()) +
   scale_fill_brewer(palette="Blues") + 
@@ -226,6 +236,8 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
 # Labor Bureau
 
 ## Labor Bureau - Data Import via .csv
+
+We wanted to invistigate if there is a correlation between crimes and unemployment rate. So we tried to investigate another dataset from the labor bureau. The dataset has five tables for the five boroghs for a  period of four years from 2014 - 2018. 
 
 ```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
 source("unemployed_dataset.R", echo = F, prompt.echo = "", spaced = F)
@@ -258,17 +270,21 @@ income_table
 
 ## Labor Bureau - Data Exploration & Analysis
 
-```{r explore income by boro, message=FALSE, warning=FALSE}
+The following boxplot shows the unemployment rate distribution per borough per year. We can see that there is a decreasing trend in the unemployment rate over the years. However, the Bronx county seems to have the highest unemployment rate over the years of a range of 5 - 6%.
+
+```{r explore income by boro, message=FALSE, warning=FALSE, echo=FALSE}
 theme_set(theme_bw())
 ggplot(income_table, aes(x=arrest_boro, y=unemployment_rate)) + 
     geom_boxplot(main = "Different boxplot for uneployment rate in the 5 counties over years",
         ylab = "Unemployment rate %",	
-        xlab = "",	
-        col = "blue",	       
+        xlab = "",
+        col = "blue",
         border = "blue") +
 facet_wrap(~year, scale="free") + 
-  theme(axis.text.x = element_text(angle=60, vjust = 0.6)) 
+  theme(axis.text.x = element_text(angle=60, vjust = 0.6)) +
+  ggtitle("Average unemployment rate over the years")
 ```
+
 
 ```{r summarize avg unemployed, message=FALSE, warning=FALSE}
 by_income <- income_table %>%
@@ -286,7 +302,10 @@ merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)
   arrange(desc(year))
 merged
 ```
-```{r normalize unemployed, message=FALSE, warning=FALSE}
+
+We tried to plot a diverging plot to investigate which borough is above or below average. So we normalized the average unemployment rate and the number of crimes. Both Brooklyn and Bronx seem to have the most significant above average for crimes committed and the unemployment rate. 
+
+```{r normalize unemployed, message=FALSE, warning=FALSE, echo=FALSE}
 # Data Prep
 merged$boro <- rownames(merged)  # create new column for boro names
 merged$unemployment_z <- round((merged$avg_unemployment_rate - mean(merged$avg_unemployment_rate))/sd(merged$avg_unemployment_rate), 2)  # compute normalized 
@@ -304,8 +323,8 @@ ggplot(merged, aes(x=`arrest_boro`, y=unemployment_z, label=unemployment_z)) +
        title= "Diverging Bars of unemployment rates in boro") + 
   coord_flip()
 ```
-The Bronx seems to have the largest amount of unemployment rate which is above the average and in the same time it has the highest crime amongst other counties. 
-```{r normalize crime, message=FALSE, warning=FALSE}
+
+```{r normalize crime, message=FALSE, warning=FALSE, echo=FALSE}
 # Data Prep
 merged$boro <- rownames(merged)  # create new column for boro names
 merged$crime_z <- round((merged$murder_counts - mean(merged$murder_counts))/sd(merged$murder_counts), 2)  # compute normalized 
@@ -319,24 +338,30 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
   scale_fill_manual(name="Crimes", 
                     labels = c("Above Average", "Below Average"), 
                     values = c("above"="#f8766d", "below"="#00ba38")) + 
-  labs(subtitle="Normalised murders'", 
-       title= "Diverging Bars of number of murders per county") + 
+  labs(subtitle="Normalised crimes'", 
+       title= "Diverging Bars of number of crimes per county") + 
   coord_flip()
 ```
-As illustrated from the diverge bar that **Bronx** also has above average number of crimes
-```{r density plot for age, message=FALSE, warning=FALSE}
+
+
+ We can see that the 25-44 age category is the largest age category density for committing crimes across all boroughs. As also demonstrated, Bronx seems to have the highest density of crimes for all age categories amongst other boroughs. 
+
+
+```{r density plot for age, message=FALSE, warning=FALSE, echo=FALSE}
 theme_set(theme_classic())
 # Plot
 g <- ggplot(arrests_df, aes(arrest_boro))
 g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
     labs(title="Density plot", 
          subtitle="Number of crimes per boro per age group distribution",
-         caption="Source: by_boro",
+         caption="Source: arrests_df",
          x="Borough",
          fill="# crimes committed per age group") 
 ```
-We can see that the 25-44 age category is the most age category for committing a crime. As also demonstrated, the **Bronx** seems to have the highest density of crimes am
-```{r treemap for arrests, message=FALSE, warning=FALSE}
+
+The treemap was used to study which race is common for committing a crime. As illustrated, BLACK is the typical race. However, Brooklyn appears to have crimes committed by BLACK than Bronx. 
+
+```{r treemap for arrests, message=FALSE, warning=FALSE, echo=FALSE}
 map <- murder_counts %>% filter(year == 2018)
 treemap(map, #Your data frame object
         index=c("perp_race","arrest_boro"),  #A list of your categorical variables
@@ -382,15 +407,18 @@ joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment
   na.omit()
 joined
 ```
-To decide whether we can make a predictive model, the first step is to see if there appears to be a relationship between our predictor and response variables (in this case crimes and unemployed). Let’s do some exploratory data visualization. I’ll use the `ggpairs()` function from the `GGally package` to create a plot matrix to see how the variables relate to one another.
 
-```{r correlation between crime and unemployed, message=FALSE, warning=FALSE}
+To start building the predictive model, we need to see if there is a correlation between our predictor and response. In this case, crimes and unemployed. We will begin by doing some exploratory data visualization. The function `ggpairs()`  from the `GGally package` was used to create a plot matrix demonstrating how the variables relate to one another.  
+
+```{r correlation between crime and unemployed, message=FALSE, warning=FALSE, echo=FALSE}
 ggpairs(data=joined, columns = 3:4, title="Crimes employed data")
 ```
 
-There is an important aspect that correlation doesn't imply causation, so I will use the regression to see if I can use this variable as a predictor. 
+There is essential regard that correlation doesn't imply causation, so constructing a regression model is imperative to comprehend whether we can use this variable as a predictor. 
 
-```{r explore-unemployed as predictor, message=FALSE, warning=FALSE}
+We started by scrutinizing the relationship between the outcome and covariant. In our case, it is the number of crimes committed and the unemployment rate. It seems that their relationship is linear.
+
+```{r explore-unemployed as predictor, message=FALSE, warning=FALSE, echo=FALSE}
 theme_set(theme_bw())  # pre-set the bw theme.
 g <- ggplot(joined, aes(unemployed, crimes)) + 
   geom_jitter() +
@@ -406,14 +434,23 @@ ggMarginal(g, type = "boxplot", fill="transparent")
 m_unemployed <- lm(crimes ~ unemployed, data = joined)
 summary(m_unemployed)
 ```
-As shown by the simple linear regression, unemployment has an **R-squared  ~0.8** which makes it a better predictor for the crimes number. However, may be there are other factors that can be a confounding factors that increase crimes, for instance race or sex. 
-Let's predict use linear prediction 
-```{r}
-predict(m_unemployed, data.frame(unemployed = 65783.31))
-# 137472.7  actual 140338 from joined table
+
+As pointed by the simple linear regression, unemployment has an **R-squared  ~0.8**. This makes it a better predictor of the number of crimes. 
+However, to make sure that our predictor model is reliable, we need to see if the residuals are so close to the actual value. This would give us a quality indicator of how is our prediction is fitting. 
+
+```{r qqplot, message=FALSE, warning=FALSE, echo=FALSE}
+plot(m_unemployed, which=2, col=c("red"))  # Q-Q Plot
 ```
-so close number; however, we need more variables to make the model predict better.
-Now, I will inspect the other categorical independent variables associated with the number of commited murders.
+
+For our model, **the Q-Q plot** shows pretty good alignment to the the line with a few points at the top slightly offset.
+
+```{r scale location plot, message=FALSE, warning=FALSE, echo=FALSE}
+plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
+```
+
+The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. So we tried to get investigate more mon building a mutlivariable regression model taking other variables into account.
+
+
 ```{r aggregate by category, message=FALSE, warning=FALSE}
 by_cat <- dat %>%
   group_by(year, boro_nm, susp_age_group, susp_sex, susp_race) %>%
@@ -421,13 +458,17 @@ by_cat <- dat %>%
   dplyr::summarise(crimes = n()) 
 by_cat
 ```
+
 Categorize age-group preparing for dummy variables
+
 ```{r construct dummy variables, message=FALSE, warning=FALSE}
 dummy_df <- by_cat
 dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
 dummy_df
 ```
+
 Converting the independent variables into factors
+
 ```{r convert variables into factors, message=FALSE, warning=FALSE}
 #function to categorize and indicate the cofounder variable
 #
@@ -442,26 +483,13 @@ filtered$susp_race <- as.factor(filtered$susp_race)
 # contrasts(filtered$susp_race)
 # reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
 ```
-```{r change reference to M, message=FALSE, warning=FALSE}
-# contrasts(filtered$susp_sex) -> female is the reference
-# filtered %>%
-#   mutate(susp_race = relevel(susp_race, ref = "BLACK")) -> filtered
-# contrasts(filtered$susp_race)  #- > now BLACK is the ref
-m_race <- lm(crimes ~ susp_race, data = filtered)
-summary(m_race) # no significance
-```
-```{r multi-reg for all variables-anova, message=FALSE, warning=FALSE}
-m_all <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
-anova(m_all)
-```
-Taking other variables (susp_age_group, susp_sex, and boro_nm) into account, it can be seen that the categorical variable **boro_nm** the most significant variable **with lowest Sum Sq**.
-```{r regression summary, warning=FALSE, message=FALSE}
-summary(m_all)
-```
-It can be seen that being **Black** is significantly associated with an average increase of 1454 in crime compared to other races with **R-squared ~ 0.35**.
+
+We will start with some exploratory analysis on the filtered dataset.
+
 Having some information shown on plots would give a good idea as to which categorical variables are good predictive features and can be used to build a machine learning model.
 Best plots for factor to factor variable comparison would be any of a jitter plot or heat map. I would use a jitter plot in this case for all of our factor-factor plots.
-```{r exploratory analysis, warning=FALSE, message=FALSE}
+
+```{r exploratory analysis, warning=FALSE, message=FALSE, echo=FALSE}
 ggplot(data = filtered, mapping = aes(x = susp_race, y = crimes)) + 
   geom_jitter(aes(colour = susp_race)) 
 ggplot(data = filtered, mapping = aes(x = susp_sex, y = crimes)) + 
@@ -472,3 +500,66 @@ ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) +
   geom_jitter(aes(colour = boro_nm)) + 
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 ```
+
+
+```{r change reference to M, message=FALSE, warning=FALSE}
+# contrasts(filtered$susp_sex) -> female is the reference
+# filtered %>%
+#   mutate(susp_race = relevel(susp_race, ref = "BLACK")) -> filtered
+# contrasts(filtered$susp_race)  #- > now BLACK is the ref
+m_race <- lm(crimes ~ susp_race, data = filtered)
+summary(m_race) # no significance
+```
+
+
+```{r multi-reg for all variables-anova, message=FALSE, warning=FALSE}
+m_all <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
+anova(m_all)
+```
+
+Taking other variables (susp_age_group, susp_sex, and boro_nm) into account.
+
+```{r regression summary, warning=FALSE, message=FALSE}
+summary(m_all)
+```
+
+It can be seen that race **Black** is significantly associated with an average increase of 1454 in crime compared to other races. Now we will study the residuals.
+
+```{r qqplot, message=FALSE, warning=FALSE, echo=FALSE}
+plot(m_all, which=2, col=c("red"))  # Q-Q Plot
+```
+
+```{r scale location plot, message=FALSE, warning=FALSE, echo=FALSE}
+plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
+```
+
+Same as when we used unemployed variables, we have concerns about residuals distribution resulted from the **Q-Q plot**. 
+
+# Conclusion
+
+## What did we learn? 
+1. Comment on decreasing trends in crime with references to demographics.
+2. Comment on unemployment trends
+3. Comment on combined analysis
+4. Comment on modeling and best predictor variables
+5. Build a geographic geomap for the commited crimes per borough
+
+## Why is this important
+1. Important in evaluating successes of policies over time
+2. Important in shaping future police inforcement policy
+3. Connection between unemployment and saftey.
+
+## Challenges
+
+1. Working with very large data sets and how we filtered it down
+2. Sourcing external scripts into Rmarkdown
+3. Merging dataset with different observation values - lower & upper case.
+4. Study which variable has a better fit for regression model.
+
+## Future Work
+
+
+# References 
+
++ [GitHub Repo](https://github.com/dhairavc/DATA607-FinalProject)
+
