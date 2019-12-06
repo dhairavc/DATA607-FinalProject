@@ -46,6 +46,7 @@ We then merged the datasets to explore further and try to draw some final conslu
 source("environment_setup.R", echo = T, prompt.echo = "", spaced = F)
 ```
 
+# NYPD Arrests
 
 ## NYPD Arrests - Data Import via API
 
@@ -167,6 +168,8 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
                                              icon = singleicon)
 ```
 
+# Labor Bureau
+
 ## Labor Bureau - Data Import via .csv
 
 ```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
@@ -220,7 +223,7 @@ by_income <- income_table %>%
 by_income
 ```
 
-## Combined Datasets
+# Combined Datasets
 
 ```{r merge murder and by income, message=FALSE, warning=FALSE}
 merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)) %>%
@@ -291,7 +294,7 @@ treemap(map, #Your data frame object
         ) 
 ```
 
-## Statistical Analysis & Modeling
+# Statistical Analysis & Modeling
 
 ```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
 source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
