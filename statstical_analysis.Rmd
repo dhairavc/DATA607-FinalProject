@@ -1,6 +1,5 @@
 ---
-title: "statistical_exploratory_analysis"
-author: "Salma Elshahawy"
+title: "DATA607 Final Project"
 date: "11/18/2019"
 output: 
   html_document:
@@ -18,6 +17,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # A Socio-Economic Investigation into Crime
+
+Presented by:
+- Salma Elshahawy [@salma71](https://github.com/salma71)
+- Dhairav Chhatbar [@dhairavc](https://github.com/dhairavc)
+- Mael Illien [@maelillien](https://github.com/maelillien)
 
 ## Introduction
 
