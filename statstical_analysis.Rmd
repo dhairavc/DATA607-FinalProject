@@ -33,7 +33,7 @@ We then merged the datasets to explore further and try to draw some final conslu
 
 ## Work flow-chart
 
-![workflowchart](/Users/salmaelshahawy/Desktop/DATA607-FinalProject/workflowchart.png)
+![workflowchart](./workflowchart.png)
 
 ## Sources
 
