@@ -482,3 +482,23 @@ ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) +
   geom_jitter(aes(colour = boro_nm)) + 
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 ```
+
+# Conclusion
+
+## What did we learn? 
+1. Comment on decreasing trends in crime with references to demographics.
+2. Comment on unemployment trends
+3. Comment on combined analysis
+4. Comment on modeling and best predictor variables
+
+## Why is this important
+1. Important in evaluating successes of policies over time
+2. Important in shaping future police inforcement policy
+3.
+
+## Challenges
+
+1. Working with very large data sets and how we filtered it down
+2. 
+
+## Future Work
