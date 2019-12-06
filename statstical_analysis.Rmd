@@ -84,6 +84,7 @@ Remove missing values where no offense description is recorded.
 arrests_df <- arrests_df %>% filter(ofns_desc != "")
 ```
 
+We generate a series of data frames aggregating the data in different manners for analysis and plotting. For example, we look at arrests by race, borough, offense.
 
 ```{r aggregation, message=FALSE, warning=FALSE}
 murder_counts <- arrests_df %>%
@@ -93,77 +94,117 @@ murder_counts <- arrests_df %>%
 murder_counts
 ```
 
-## NYPD Arrest - Data Exploration & Analysis
-
-### Evolution of Crime 2014-2018
-
-Let's study the evolution of crime over the period of interest (2014-2018).
-
 ```{r }
+# get the count of arrests per year, by borough
 grouped_boro <- arrests_df %>% 
   group_by(year, arrest_boro) %>% 
   dplyr::summarize(count = n()) %>% 
   arrange(desc(count))
 ```
 
-What the plot below reveals is that overall crime is decreasing for all boroughs of NYC. The data year over year is very similar, appearing to simply scale down over time. 
+```{r}
+# get the count of offenses per year, by borough
+grouped_offenses <- arrests_df %>% 
+  group_by(year, arrest_boro, ofns_desc) %>% 
+  dplyr::summarize(count = n()) %>%
+  arrange(desc(count))
+```
 
-What we can note as suprising is the fact that total crime between Manhattan and Brooklyn is at fairly similar levels. Total crime is aggregated without accounting for different types of crime so we will further our investigation by dissecting crime per borough.
+```{r message=FALSE, warning=FALSE}
+# get the top five offense per borough
+t5 <- grouped_offenses %>% top_n(5)
+```
+
+```{r message=FALSE, warning=FALSE}
+# get the counts of offenses overall
+crime_counts <- arrests_df %>% 
+  group_by(ofns_desc) %>% 
+  dplyr::summarize(count = n()) %>% 
+  arrange(desc(count))
+```
 
 ```{r}
+# get the count of arrests related to dangerous drugs by year, by borough
+drugs <- arrests_df %>% 
+  filter(ofns_desc == 'DANGEROUS DRUGS') %>% 
+  group_by(year, arrest_boro) %>% 
+  dplyr::summarize(count = n())
+```
+
+## NYPD Arrest - Data Exploration & Analysis
+
+### Evolution of Crime 2014-2018
+
+Let's study the evolution of crime over the period of interest (2014-2018).
+
+What the plot below reveals is that overall crime is decreasing for all boroughs of NYC. The data year over year is very similar, appearing to simply scale down over time. 
+
+```{r, echo=FALSE}
 ggplot(grouped_boro, aes(x = reorder(year, -count), y = count, fill = arrest_boro)) + 
   geom_bar(stat = 'identity', position = position_dodge()) +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,120000,10000)) +
   xlab("year") + ylab("total crime") + ggtitle("Crime by Borough Time Series") +
   scale_fill_brewer(palette="Blues") + theme_minimal()
 ```
-```{r}
-grouped_offenses <- arrests_df %>% 
-  group_by(year, arrest_boro, ofns_desc) %>% 
-  dplyr::summarize(count = n())
-```
-```{r}
-t5 <- grouped_offenses %>% top_n(5)
-```
-```{r message=FALSE, warning=FALSE}
-ggplot(t5, aes(x = reorder(arrest_boro, -count), y = count, fill=ofns_desc)) + 
-  geom_bar(stat = 'identity', position = position_dodge()) +
-  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,80000,5000)) +
-  xlab("borough") + ylab("crime rate") + ggtitle("Most Common Crimes by Borough 2014-2018") +
-  scale_fill_brewer(palette="Blues") + theme_minimal()
-```
 
-Perhaps we can comment on effective crime measures by looking at the least common crimes.
+What we can note as suprising is the fact that total crime between Manhattan and Brooklyn is at fairly similar levels. Total crime is aggregated without accounting for different types of crime so we will further our investigation by looking at top crimes overall, and then dissecting crime per borough.
 
-```{r message=FALSE, warning=FALSE}
+Here is a plot of the top 10 most common crimes for the 2014-2018 period across all boroughs. We learn that dangerous drugs related offenses are the most prevailent followed by 3rd degree assaults.
 
-ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count, FUN = sum), y = count)) + 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(crime_counts %>% top_n(10), aes(x = reorder(ofns_desc, -count), y = count)) + 
   geom_bar(stat = 'identity', fill= 'lightblue') + 
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,300000,50000)) +
+  geom_text(aes(label = count), hjust = 1.25, color='white') +
+  coord_flip() + 
+  xlab("offense") + ylab("count")  + ggtitle("Most Common Crimes 2014-2018") +
+  theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
+```
+
+A peek at the bottom 10 crimes for the same period reveals somewhat unexpected crimes like disruption of a religious service. It is interesting to note that while dangerous drugs offenses are the most common crime, only 1 person was arrested for being under the influence of drugs.
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+ggplot(crime_counts %>% top_n(-10), aes(x = reorder(ofns_desc, -count), y = count)) + 
+  geom_bar(stat = 'identity', fill= 'lightblue') + 
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,75,5)) +
+  geom_text(aes(label = count), hjust = 1.25, color='white') +
   coord_flip() + 
   xlab("offense") + ylab("count")  + ggtitle("Least Common Crimes 2014-2018") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
 ```
-```{r}
-drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year, arrest_boro) %>% dplyr::summarize(count = n())
+
+Following from  the exploration above, we take a deeper look at the most common crimes by borough. On the plot below, we once again see that how drug related offenses are the most common crimes and that this is consistent across boroughs. We notice that while Brooklyn and Manhattan had the most crimes, the Bronx captures the most drug arrests.
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+ggplot(t5, aes(x = reorder(arrest_boro, -count), y = count, fill=ofns_desc)) + 
+  geom_bar(stat = 'identity', position = position_dodge()) +
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,80000,5000)) +
+  xlab("borough") + ylab("crime rate") + ggtitle("Top 5 Crimes by Borough") +
+  scale_fill_brewer(palette="Blues") + theme_minimal()
 ```
-```{r}
+
+The plot below explores that relationship over time for each borough. We observe that similarly to crime in general, drug related arrests are going down.
+
+```{r echo=FALSE}
 ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   geom_line() + 
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,30000,2500)) +
   xlab("year") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
   
 ```
-```{r message=FALSE, warning=FALSE}
+
+We continue investigating the demographics and take a look at the distribution of crime by gender. Male adults between the ages of 25-44 remain the most common perpetrators. 
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
 ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) + 
   geom_histogram(stat = "count", position=position_dodge()) +
   scale_fill_brewer(palette="Blues") + 
   xlab("age group") + ylab("count")  + ggtitle("Perpetrator Age Group and Gender Distribution") +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,7000000,100000))
 ```
-```{r}
-grouped_arrests <- arrests_df %>% group_by(year, arrest_boro, ofns_desc, age_group, perp_sex, perp_race) %>% 
-  dplyr::summarize(count = n())
-```
+
+This interactive map will let you explore the distribution of crime geographically.
 
 ```{r map for arrests,echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
 arrests_map <- arrests_df %>% filter(year == 2018)
