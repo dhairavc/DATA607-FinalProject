@@ -443,13 +443,13 @@ summary(m_unemployed)
 As pointed by the simple linear regression, unemployment has an **R-squared  ~0.8**. This makes it a better predictor of the number of crimes. 
 However, to make sure that our predictor model is reliable, we need to see if the residuals are so close to the actual value. This would give us a quality indicator of how is our prediction is fitting. 
 
-```{r qqplot, message=FALSE, warning=FALSE, echo=FALSE}
+```{r message=FALSE, warning=FALSE, echo=FALSE}
 plot(m_unemployed, which=2, col=c("red"))  # Q-Q Plot
 ```
 
 For our model, **the Q-Q plot** shows pretty good alignment to the the line with a few points at the top slightly offset.
 
-```{r scale location plot, message=FALSE, warning=FALSE, echo=FALSE}
+```{r message=FALSE, warning=FALSE, echo=FALSE}
 plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
 ```
 
@@ -564,9 +564,9 @@ Same as when we used unemployed variables, we have concerns about residuals dist
 4. Study which variable has a better fit for regression model.
 
 
-# References 
-
-+ [GitHub Repo](https://github.com/dhairavc/DATA607-FinalProject)
-
 
 ## Future Work
+
+## References 
+
++ [GitHub Repo](https://github.com/dhairavc/DATA607-FinalProject)
