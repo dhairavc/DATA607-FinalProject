@@ -145,6 +145,9 @@ ggplot(grouped_offenses %>% top_n(-25), aes(x = reorder(ofns_desc, -count), y = 
 ```{r}
 drugs <- arrests_df %>% filter(ofns_desc == 'DANGEROUS DRUGS') %>% group_by(year, arrest_boro) %>% dplyr::summarize(count = n())
 ```
+
+From the exploration above, we see that dangerous drugs related offenses are the most prevailent and that this is consistent across boroughs. The next most common offenses are assaults. Lets looks deeper and explore how drug related offenses have changed over time in each borough.
+
 ```{r}
 ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   geom_line() + 
