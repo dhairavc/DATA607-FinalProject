@@ -427,6 +427,8 @@ joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="
 joined
 ```
 
+## Linear Regression
+
 To start building the predictive model, we need to see if there is a correlation between our predictor and response. In this case, crimes and unemployed. We will begin by doing some exploratory data visualization to verify the conditions for inference. The function `ggpairs()`  from the `GGally package` was used to create a plot matrix demonstrating how the variables relate to one another.  
 
 ```{r correlation between crime and unemployed, message=FALSE, warning=FALSE, echo=FALSE}
@@ -467,7 +469,18 @@ For our model, **the Q-Q plot** testing the normality of the residuals shows pre
 plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
 ```
 
-The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. So we tried to get investigate more by building a mutlivariable regression model taking other variables into account.
+The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. 
+
+The model below based on race only explains ~20% of the variance in the data but the predictors of black, white and white hispanic are significant.
+
+```{r change reference to M, message=FALSE, warning=FALSE}
+m_race <- lm(crimes ~ susp_race, data = filtered)
+summary(m_race) # no significance
+```
+
+To improve our model we investigated further by building a mutlivariable regression model taking other variables into account.
+
+## Multiple Regression
 
 ```{r aggregate by category, message=FALSE, warning=FALSE}
 by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
@@ -518,13 +531,6 @@ ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) +
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 ```
 
-The model below only explains ~20% of the variance in the data but the predictors of black, white and white hispanic are significant.
-
-```{r change reference to M, message=FALSE, warning=FALSE}
-m_race <- lm(crimes ~ susp_race, data = filtered)
-summary(m_race) # no significance
-```
-
 We then took other variables (susp_age_group, susp_sex, and boro_nm) into account.
 
 ```{r regression summary, warning=FALSE, message=FALSE}
@@ -540,7 +546,7 @@ We study the residuals to verify the validity of our model and similarly to when
 plot(m_all, which=2, col=c("red"))  # Q-Q Plot
 ```
 
-# Conclusion
+## ANOVA
 
 Given that that for our model we had an Adjusted R-squared: 0.4175, this would indicate that the model does explain 41.75% of the variability.  
 To see if this amount is significant, we analyze the variances. Since the p-values of the variances are near zero,  
@@ -550,35 +556,47 @@ To see if this amount is significant, we analyze the variances. Since the p-valu
 anova(m_all)
 ```
 
+# Conclusion
 
-## What did we learn? 
+## Summary of findings
+
+Our investigation allows us to make a number of findings:  
+
 1. While crime overall is decreasing in NYC, black individuals are still disportionaly inclined to commit more crimes. The largest coefficent in the regression model is where the suspect race is black, 3219.82. 
 
-2. The Bronx remains the boro with the highest unemployment rate, but Brooklyn and Manhatten have the highest crime rates of the 5 boros. 
+2. The Bronx remains the borough with the highest unemployment rate, but Brooklyn and Manhattan have the highest crime rates of the 5 boroughs. 
 
-3. At a marco level, each increase in unemployment by one, results in a crime increase of 1.2209. At a more micro level, being a black or white/hispanic male is a good predictor of a crime. 
+3. The 25-44 age groups is the most likely to commit crimes for both genders.  
+
+3. At a macro level, each increase in unemployment by one, results in a crime increase of 1.2209. At a more micro level, being a black or white/hispanic male is a good predictor of a crime.  
     
-4. Build a geographic geomap for the commited crimes per borough
+5. We built a geographic map of tghe distribution of commited crimes per borough.  
 
+6. With an R-squared of ~75% we found that unemployment is indeed a good predictor of crime.  
 
-## Why is this important
-1. Important in evaluating successes of policies over time
-2. Important in shaping future police inforcement policy
-3. Connection between unemployment and saftey
+7. With an R-squared of ~42% we found that our multivariable model explains some of the variability in the data but the significant skew should make us cautious.  
 
+## Why is this important?
 
+1. This kind of study is important in evaluating the success of policies over time by seeing the impact and relationships between crime and particular demographics. 
+
+2. It can also be used to shape the future of police enforcement policy by allowin the department to better use their resources to tackle most common crimes where they are more likely to be concentrated.  
+
+3. By merging crimes obersvations with socio-economic factor, we can identify connections to other variables like unemployment and shape policy by arguing that an investment in labor resources could have a significant beneficial impact on crime.  
+
+## Future Work
+
+Future work would involve collecting more variables for demographics and socio economic conditions like health and eduction and building a more encompassing model to predict crime rates. 
 
 ## Challenges
 
-1. Working with very large data sets and how we filtered it down
-2. Sourcing external scripts into Rmarkdown
+Throughout this assignment, we encountered a series of challenges like the following:
+
+1. Working with very large data sets and we filtering them down
+2. Sourcing external scripts into Rmarkdown to speed up knitting
 3. Merging datasets with no distinct identifiers across each obsrvations  
-4. Merging dataset with different observation values - lower & upper case
-5. Determining which set of variables are a better fit for regression model
-
-
-
-## Future Work
+4. Merging dataset with different inconsistent observation values
+5. Determining which set of variables are a better fit for regression modeling.
 
 ## References 
 
