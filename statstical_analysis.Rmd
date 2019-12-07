@@ -260,7 +260,7 @@ head(staten)
 
 ## Labor Bureau - Data Transformation
 
-```{r clean unemployed, message=FALSE, warning=FALSE}
+```{r clean, message=FALSE, warning=FALSE}
 clean_table <- function (table) {
   table_content <- table %>%
     na.omit()
@@ -269,6 +269,9 @@ clean_table <- function (table) {
     select(arrest_boro, year, labor_force, employed, unemployed, unemployment_rate) 
   return(final_table)
 }
+```
+
+```{r clean unemployed, message=FALSE, warning=FALSE}
 bronx_income <- clean_table(bronx)
 queens_income <- clean_table(queens)
 brooklyn_income <- clean_table(brooklyn)
