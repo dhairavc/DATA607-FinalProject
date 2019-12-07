@@ -258,6 +258,8 @@ head(manhattan)
 
 ## Labor Bureau - Data Transformation
 
+We perfomed typical data transformation operations to clean the table. This involves removing missing values and renaming columns. 
+
 ```{r clean, message=FALSE, warning=FALSE}
 clean_table <- function (table) {
   table_content <- table %>%
