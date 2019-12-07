@@ -390,6 +390,8 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
 
 To answer the initial hypothesized question, the combined dataset is utilized in a linear regression modeling exercise to understand the relationship between the variables. In this process we were able to identify which variables are the greatest predictors of the number of crimes commited.
 
+We will also verify the conditions for inference for linear modeling.
+
 ```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
 source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
 dat
@@ -425,7 +427,7 @@ joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="
 joined
 ```
 
-To start building the predictive model, we need to see if there is a correlation between our predictor and response. In this case, crimes and unemployed. We will begin by doing some exploratory data visualization. The function `ggpairs()`  from the `GGally package` was used to create a plot matrix demonstrating how the variables relate to one another.  
+To start building the predictive model, we need to see if there is a correlation between our predictor and response. In this case, crimes and unemployed. We will begin by doing some exploratory data visualization to verify the conditions for inference. The function `ggpairs()`  from the `GGally package` was used to create a plot matrix demonstrating how the variables relate to one another.  
 
 ```{r correlation between crime and unemployed, message=FALSE, warning=FALSE, echo=FALSE}
 ggpairs(data=joined, columns = 3:4, title="Crimes employed data")
@@ -459,14 +461,13 @@ However, to make sure that our predictor model is reliable, we need to see if th
 plot(m_unemployed, which=2, col=c("red"))  # Q-Q Plot
 ```
 
-For our model, **the Q-Q plot** shows pretty good alignment to the the line with a few points at the top slightly offset.
+For our model, **the Q-Q plot** testing the normality of the residuals shows pretty good alignment to the the line with a few points at the top slightly offset indicating some skew. 
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
 ```
 
 The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. So we tried to get investigate more mon building a mutlivariable regression model taking other variables into account.
-
 
 ```{r aggregate by category, message=FALSE, warning=FALSE}
 by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
