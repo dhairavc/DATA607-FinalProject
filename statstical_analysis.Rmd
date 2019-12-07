@@ -467,7 +467,7 @@ For our model, **the Q-Q plot** testing the normality of the residuals shows pre
 plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
 ```
 
-The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. So we tried to get investigate more mon building a mutlivariable regression model taking other variables into account.
+The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. So we tried to get investigate more by building a mutlivariable regression model taking other variables into account.
 
 ```{r aggregate by category, message=FALSE, warning=FALSE}
 by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
@@ -518,31 +518,27 @@ ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) +
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 ```
 
+The model below only explains ~20% of the variance in the data but the predictors of black, white and white hispanic are significant.
 
 ```{r change reference to M, message=FALSE, warning=FALSE}
 m_race <- lm(crimes ~ susp_race, data = filtered)
 summary(m_race) # no significance
 ```
 
-
-Taking other variables (susp_age_group, susp_sex, and boro_nm) into account.
+We then took other variables (susp_age_group, susp_sex, and boro_nm) into account.
 
 ```{r regression summary, warning=FALSE, message=FALSE}
 m_all <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
 summary(m_all)
 ```
 
-It can be seen that race **Black** is significantly associated with an average increase of 3219 in crime rates compared to other races. Now we will study the residuals.
+It can be seen that other factors remaining the same, **Black** is associated with an average increase of 3219 in crime rates compared to other races. 
+
+We study the residuals to verify the validity of our model and similarly to when we used the unemployed variable, we have concerns about the residuals distribution revealed by the **Q-Q plot**. 
 
 ```{r qqplot, message=FALSE, warning=FALSE, echo=FALSE}
 plot(m_all, which=2, col=c("red"))  # Q-Q Plot
 ```
-
-```{r scale location plot, message=FALSE, warning=FALSE, echo=FALSE}
-plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
-```
-
-Same as when we used unemployed variables, we have concerns about residuals distribution resulted from the **Q-Q plot**. 
 
 # Conclusion
 
