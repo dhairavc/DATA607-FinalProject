@@ -26,19 +26,19 @@ Presented by:
 
 ## Introduction
 
-This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment and crime data in NYC. Specifically we would like to explore the impact of unemployment on crime within the New York City. The overarching question we want to hypothesize on would be
+This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment and crime data in NYC. Specifically we wanted to explore the impact of unemployment on crime within New York City. The guiding question for our statistical analysis if the following hypothesis:
 
 \[H0: Unemployment \ does \ not \ impact \ crime\ (R^2 = 0) \]
 \[HA: Unemployment \ does \ impact \ crime\ (R^2 > 0) \]
 
 
-We hope that this investigation and other explotory alongside will provide use information that could be used to formulate policy proposals. We used the following process for each dataset:	
+We hoped that this investigation alongside exploratory data analysis would provide us with useful information that could be used to formulate policy proposals. We used the following process for each dataset:	
 
 1. Data Import (API and .csv)	
 2. Data Transformation (handling missing data, tidying)	
 3. Data Exploration & Analysis (commentary, visualizations)	
 
-We then merged the datasets to explore further and try to draw some final conslusions based on the resulting model
+We then merged the datasets to explore further and try to draw some final conslusions based on the resulting model.
 
 ## Work flow-chart
 
