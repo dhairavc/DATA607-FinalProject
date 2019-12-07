@@ -427,6 +427,37 @@ joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="
 joined
 ```
 
+```{r aggregate by category, message=FALSE, warning=FALSE}
+by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
+colnames(by_cat) <- c("year", "boro_nm", "susp_age_group", "susp_sex", "susp_race", "crimes")
+by_cat
+```
+
+Categorize age-group preparing for dummy variables
+
+```{r construct dummy variables, message=FALSE, warning=FALSE}
+dummy_df <- by_cat
+dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
+dummy_df
+```
+
+Converting the independent variables into factors
+
+```{r convert variables into factors, message=FALSE, warning=FALSE}
+#function to categorize and indicate the cofounder variable
+#
+# function to categorise - dummy variables
+filtered <- dummy_df %>%
+  filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
+## change to factor level
+filtered$boro_nm <- as.factor(filtered$boro_nm)
+filtered$susp_age_group <- as.factor(filtered$susp_age_group)
+filtered$susp_sex <- as.factor(filtered$susp_sex)
+filtered$susp_race <- as.factor(filtered$susp_race)
+# contrasts(filtered$susp_race)
+# reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
+```
+
 ## Linear Regression
 
 To start building the predictive model, we need to see if there is a correlation between our predictor and response. In this case, crimes and unemployed. We will begin by doing some exploratory data visualization to verify the conditions for inference. The function `ggpairs()`  from the `GGally package` was used to create a plot matrix demonstrating how the variables relate to one another.  
@@ -481,37 +512,6 @@ summary(m_race) # no significance
 To improve our model we investigated further by building a mutlivariable regression model taking other variables into account.
 
 ## Multiple Regression
-
-```{r aggregate by category, message=FALSE, warning=FALSE}
-by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
-colnames(by_cat) <- c("year", "boro_nm", "susp_age_group", "susp_sex", "susp_race", "crimes")
-by_cat
-```
-
-Categorize age-group preparing for dummy variables
-
-```{r construct dummy variables, message=FALSE, warning=FALSE}
-dummy_df <- by_cat
-dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
-dummy_df
-```
-
-Converting the independent variables into factors
-
-```{r convert variables into factors, message=FALSE, warning=FALSE}
-#function to categorize and indicate the cofounder variable
-#
-# function to categorise - dummy variables
-filtered <- dummy_df %>%
-  filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
-## change to factor level
-filtered$boro_nm <- as.factor(filtered$boro_nm)
-filtered$susp_age_group <- as.factor(filtered$susp_age_group)
-filtered$susp_sex <- as.factor(filtered$susp_sex)
-filtered$susp_race <- as.factor(filtered$susp_race)
-# contrasts(filtered$susp_race)
-# reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
-```
 
 We will start with some exploratory analysis on the filtered dataset.
 
