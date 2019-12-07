@@ -249,13 +249,11 @@ This dataset provides socio-economic observations like incomes and unemployment 
 
 ## Labor Bureau - Data Import via .csv
 
+We load the script below to import the data into R. Here is a snapshot of the data for Manhattan.
+
 ```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
 source("unemployed_dataset.R", echo = F, prompt.echo = "", spaced = F)
-head(bronx)
-head(queens)
-head(brooklyn)
 head(manhattan)
-head(staten)
 ```
 
 ## Labor Bureau - Data Transformation
