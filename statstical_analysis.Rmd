@@ -274,7 +274,7 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
 
 We wanted to investigate if there is a correlation between crimes and unemployment rate. So we extended our analysis with another dataset from the labor bureau. The dataset has five tables for the five boroghs for a  period of four years from 2014 - 2018. 
 
-This dataset provides socio-economic observations like incomes and unemployment of the active labor force.
+This dataset provides socio-economic observations like unemployed population and the unemployment rate of the active labor force.
 
 ## Labor Bureau - Data Import via .csv
 
@@ -388,7 +388,7 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
 
 # Statistical Analysis & Modeling
 
-To anser the initial hypothesized question, the combined dataset is utilized in a linear regression modeling exercise to understand the relationship between the variables. In this process we were able to identify which variables are the greatest predictors of the number of crimes commited.
+To answer the initial hypothesized question, the combined dataset is utilized in a linear regression modeling exercise to understand the relationship between the variables. In this process we were able to identify which variables are the greatest predictors of the number of crimes commited.
 
 ```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
 source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
@@ -403,12 +403,9 @@ res
 ```
 ```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
 #by_crime <- res %>% mutate_if(is.character, str_to_lower) 
-
-
 by_crime <- arrests_df %>% select(year, arrest_boro) %>% group_by(year, arrest_boro) %>% dplyr::summarise(crimes = n())
 colnames(by_crime) <- c("year", "boro_nm", "crimes" )
 by_crime
-
 ```
 ```{r filter by unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
 dat2 <- income_table
@@ -424,8 +421,6 @@ by_unemployment
 ```
 ```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
 #joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) 
- 
-
 joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="boro_nm"))
 joined
 ```
@@ -445,10 +440,10 @@ theme_set(theme_bw())  # pre-set the bw theme.
 g <- ggplot(joined, aes(unemployed, crimes)) + 
   geom_jitter() +
   geom_smooth(method="lm") +
-  labs(subtitle="Crimes per unemployed: crimes vs unemployed numbers", 
-       y="Crimes", 
-       x="Unemployed", 
-       title="Scatterplot with overlapping points", 
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,150000,25000)) +
+  labs(y="Crimes", 
+       x="Unemployed Population", 
+       title="Crimes vs Unemployed Population", 
        caption="Source: joined")
 ggMarginal(g, type = "boxplot", fill="transparent")
 ```
