@@ -1,5 +1,5 @@
 ---
-title: "statistical_exploratory_analysis"
+title: "DATA607 Final Project"
 author: "Salma Elshahawy, Mael Illien, Dhairav Chhatbar"
 date: "11/18/2019"
 output: 
@@ -20,25 +20,25 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Presented by:
 
-+ Salma Elshahawy [@salma71](https://github.com/salma71)
-+ Dhairav Chhatbar [@dhairavc](https://github.com/dhairavc)
-+ Mael Illien [@maelillien](https://github.com/maelillien) 
++ Salma Elshahawy [salma71](https://github.com/salma71)
++ Dhairav Chhatbar [dhairavc](https://github.com/dhairavc)
++ Mael Illien [maelillien](https://github.com/maelillien) 
 
 ## Introduction
 
-This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment and crime data in NYC. Specifically we would like to explore the impact of unemployment on crime within the New York City. The overarching question we want to hypothesize on would be
+This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on socio-economic information, namely unemployment and crime data in NYC. Specifically we wanted to explore the impact of unemployment on crime within New York City. The guiding question for our statistical analysis if the following hypothesis:
 
 \[H0: Unemployment \ does \ not \ impact \ crime\ (R^2 = 0) \]
 \[HA: Unemployment \ does \ impact \ crime\ (R^2 > 0) \]
 
 
-We hope that this investigation and other explotory alongside will provide use information that could be used to formulate policy proposals. We used the following process for each dataset:	
+We hoped that this investigation alongside exploratory data analysis would provide us with useful information that could be used to formulate policy proposals. We used the following process for each dataset:	
 
 1. Data Import (API and .csv)	
 2. Data Transformation (handling missing data, tidying)	
 3. Data Exploration & Analysis (commentary, visualizations)	
 
-We then merged the datasets to explore further and try to draw some final conslusions based on the resulting model
+We then merged the datasets to explore further and try to draw some final conslusions based on the resulting model.
 
 ## Work flow-chart
 
@@ -46,25 +46,27 @@ We then merged the datasets to explore further and try to draw some final conslu
 
 ## Sources of Datasets
 
-- [NYPD Complaint Data Historic](https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i56i)
+- [NYPD Arrests Data Historic](https://data.cityofnewyork.us/Public-Safety/NYPD-Arrests-Data-Historic-/8h9b-rp9u)
 - [Unemployment data from the Department of Labor](https://www.labor.ny.gov/stats/nyc/)
 
 
 ## Environment Setup
+
+The packages are loaded from a separate R file.
 
 ```{r environment setup, message=FALSE, warning=FALSE}
 source("environment_setup.R", echo = T, prompt.echo = "", spaced = F)
 ```
 
 # NYPD Arrests
-The NYPD Arrests database provides observations of confirmed (individuals NOT acquitted of all charges) crimes that are reported to the New York City Police Department (NYPD)  
+
+We will start with the NYPD Arrests Data (Historic) data from NYC Open Data found below and conduct some exploratory data analysis to find out how arrests are distributed in general. We will explore demographic trends as well as trends in particular kinds of arrest or by boroughs.
+
+This dataset provides observations of confirmed (individuals NOT acquitted of all charges) crimes as recorded New York City Police Department (NYPD).  
 
 ## NYPD Arrests - Data Import via API
 
-We will start with the NYPD Arrests Data (Historic) data from NYC Open Data found below and conduct some exploratory data analysis to find out how arrests are distributed in general. We will explore trends like for example investigating seasonality trends or trends in particular kinds of arrest or by boroughs.
-
 There are 4.8M rows, there are 18 columns and each row is an arrest.
-
 
 variable         | description
 ---------------- | -----------
@@ -79,7 +81,7 @@ variable         | description
 `latitude`       | Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 `longitude`      | Longitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 
-Load the data into R using the RSocrata API.
+The loaded R script will read the data into R using the RSocrata API.
 
 ```{r arrests, warning=FALSE, message=FALSE}
 source("arrests_dataset.R", echo = F, prompt.echo = "", spaced = F)
@@ -149,8 +151,6 @@ drugs <- arrests_df %>%
 
 ## NYPD Arrest - Data Exploration & Analysis
 
-### Evolution of Crime 2014-2018
-
 Let's study the evolution of crime over the period of interest (2014-2018).
 
 What the plot below reveals is that overall crime is decreasing for all boroughs of NYC. The data year over year is very similar, appearing to simply scale down over time. 
@@ -210,7 +210,7 @@ ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   
 ```
 
-We continue investigating the demographics and take a look at the distribution of crime by gender. Male adults between the ages of 25-44 remain the most common perpetrators. 
+We continue investigating the demographics and take a look at the distribution of crime by gender. Male adults between the ages of 25-44 remain the most common perpetrators. This age group is also the common for female perpetrators.
 
 ```{r age group gender distribution, message=FALSE, warning=FALSE, echo=FALSE}
 ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) + 
@@ -220,7 +220,36 @@ ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,7000000,100000))
 ```
 
-This interactive map will let you explore the distribution of crime geographically.  
+By exploring age group futher by borough, we can see that the 25-44 age category is also the largest age category density for committing crimes across all boroughs. As also shown below, the Bronx seems to have the highest density of crimes for all age categories across boroughs. 
+
+```{r density plot for age, message=FALSE, warning=FALSE, echo=FALSE, fig.width=10}
+theme_set(theme_classic())
+# Plot
+g <- ggplot(arrests_df, aes(arrest_boro))
+g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
+    labs(title="Density plot", 
+         subtitle="Number of crimes per boro per age group distribution",
+         caption="Source: arrests_df",
+         x="Borough",
+         fill="Age group") 
+```
+
+The treemap below was used to study which perpetrator race is the most common by borough. As illustrated, BLACK is the greatest proportion. However, Brooklyn appears to have more crimes committed by BLACK than the Bronx. 
+
+```{r treemap for arrests, message=FALSE, warning=FALSE, echo=FALSE}
+map <- murder_counts %>% filter(year == 2018)
+treemap(map, #Your data frame object
+        index=c("perp_race","arrest_boro"),  #A list of your categorical variables
+        vSize = "murder_counts",  #This is your quantitative variable
+        type="categorical", #Type sets the organization and color scheme of your treemap
+        vColor = "arrest_boro", #Type sets the organization and color scheme of your treemap
+        palette = "Set1",  #Select your color palette from the RColorBrewer presets or make your own.
+        title="Crime distribution committed by different races - year 2018", #Customize your title
+        fontsize.title = 14 #Change the font size of the title
+        ) 
+```
+
+To take the investigation even further, this interactive map will let you explore the distribution of crime geographically.  
 
 ```{r map for arrests,echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
 arrests_map <- arrests_df %>% filter(year == 2018)
@@ -240,25 +269,25 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
 ```
 
 # Labor Bureau
-The labor dataset provides observations on the active labor force and the population that remains unemployed per boro 
 
+We wanted to investigate if there is a correlation between crimes and unemployment rate. So we extended our analysis with another dataset from the labor bureau. The dataset has five tables for the five boroghs for a  period of four years from 2014 - 2018. 
+
+This dataset provides socio-economic observations like unemployed population and the unemployment rate of the active labor force.
 
 ## Labor Bureau - Data Import via .csv
 
-We wanted to invistigate if there is a correlation between crimes and unemployment rate. So we tried to investigate another dataset from the labor bureau. The dataset has five tables for the five boroghs for a  period of four years from 2014 - 2018. 
+We load the script below to import the data into R. Here is a snapshot of the data for Manhattan.
 
 ```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
 source("unemployed_dataset.R", echo = F, prompt.echo = "", spaced = F)
-head(bronx)
-head(queens)
-head(brooklyn)
 head(manhattan)
-head(staten)
 ```
 
 ## Labor Bureau - Data Transformation
 
-```{r clean unemployed, message=FALSE, warning=FALSE}
+We perfomed typical data transformation operations to clean the table. This involves removing missing values and renaming columns. 
+
+```{r clean, message=FALSE, warning=FALSE}
 clean_table <- function (table) {
   table_content <- table %>%
     na.omit()
@@ -267,6 +296,9 @@ clean_table <- function (table) {
     select(arrest_boro, year, labor_force, employed, unemployed, unemployment_rate) 
   return(final_table)
 }
+```
+
+```{r clean unemployed, message=FALSE, warning=FALSE}
 bronx_income <- clean_table(bronx)
 queens_income <- clean_table(queens)
 brooklyn_income <- clean_table(brooklyn)
@@ -276,9 +308,17 @@ income_table <- Reduce(function(...) merge(..., all=T), list(bronx_income, queen
 income_table 
 ```
 
+```{r summarize avg unemployed, message=FALSE, warning=FALSE}
+by_income <- income_table %>%
+  group_by(arrest_boro, year) %>%
+  dplyr::summarise(avg_unemployment_rate = max(unemployment_rate)) %>%
+  arrange(desc(year))
+by_income
+```
+
 ## Labor Bureau - Data Exploration & Analysis
 
-The following boxplot shows the unemployment rate distribution per borough per year. We can see that there is a decreasing trend in the unemployment rate over the years. However, the Bronx county seems to have the highest unemployment rate over the years of a range of 5 - 6%.
+The following boxplot shows the unemployment rate distribution per borough per year. We can see that there is a decreasing trend in the unemployment rate over the years. However, the Bronx county seems to have the highest unemployment rate over the years and it remains the highest in 2018 with a range of 5 - 6%.
 
 ```{r explore income by boro, message=FALSE, warning=FALSE, echo=FALSE}
 theme_set(theme_bw())
@@ -290,16 +330,7 @@ ggplot(income_table, aes(x=arrest_boro, y=unemployment_rate)) +
         border = "blue") +
 facet_wrap(~year, scale="free") + 
   theme(axis.text.x = element_text(angle=60, vjust = 0.6)) +
-  ggtitle("Average unemployment rate over the years")
-```
-
-
-```{r summarize avg unemployed, message=FALSE, warning=FALSE}
-by_income <- income_table %>%
-  group_by(arrest_boro, year) %>%
-  dplyr::summarise(avg_unemployment_rate = max(unemployment_rate)) %>%
-  arrange(desc(year))
-by_income
+  ggtitle("Unemployment rate dsitributed by year and by borough")
 ```
 
 # Combined Datasets
@@ -312,6 +343,78 @@ merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)
   arrange(desc(year))
 merged
 ```
+
+## Combined - Data Transformation
+
+```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
+source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
+dat
+```
+```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
+res <- dat %>%
+  group_by(year, boro_nm) %>%
+  filter(boro_nm != "") %>%
+  dplyr::summarise(crimes = n()) 
+res
+```
+
+```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
+#by_crime <- res %>% mutate_if(is.character, str_to_lower) 
+by_crime <- arrests_df %>% select(year, arrest_boro) %>% group_by(year, arrest_boro) %>% dplyr::summarise(crimes = n())
+colnames(by_crime) <- c("year", "boro_nm", "crimes" )
+by_crime
+```
+```{r filter by unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
+dat2 <- income_table
+dat2$unemployed <- as.numeric(gsub(",", "", dat2$unemployed))
+names(dat2)[1] <- "boro_nm"
+subet <- dat2[c(1:2,5)]
+by_unemployment <- subet %>%
+  group_by(year, boro_nm) %>%
+  dplyr::summarise(unemployed = round(mean(unemployed), 2)) #%>%
+  #mutate_if(is.character, str_to_lower)
+by_unemployment$boro_nm <- revalue(by_unemployment$boro_nm, c("Queens "="Queens"))
+by_unemployment
+```
+
+```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
+#joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) 
+joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="boro_nm"))
+joined
+```
+
+```{r aggregate by category, message=FALSE, warning=FALSE}
+by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
+colnames(by_cat) <- c("year", "boro_nm", "susp_age_group", "susp_sex", "susp_race", "crimes")
+by_cat
+```
+
+Categorize age-group preparing for dummy variables
+
+```{r construct dummy variables, message=FALSE, warning=FALSE}
+dummy_df <- by_cat
+dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
+dummy_df
+```
+
+Converting the independent variables into factors
+
+```{r convert variables into factors, message=FALSE, warning=FALSE}
+#function to categorize and indicate the cofounder variable
+#
+# function to categorise - dummy variables
+filtered <- dummy_df %>%
+  filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
+## change to factor level
+filtered$boro_nm <- as.factor(filtered$boro_nm)
+filtered$susp_age_group <- as.factor(filtered$susp_age_group)
+filtered$susp_sex <- as.factor(filtered$susp_sex)
+filtered$susp_race <- as.factor(filtered$susp_race)
+# contrasts(filtered$susp_race)
+# reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
+```
+
+## Combined - Data Exploration & Analysis
 
 We tried to plot a diverging plot to investigate which borough is above or below average. So we normalized the average unemployment rate and the number of crimes. Both Brooklyn and Bronx seem to have the most significant above average for crimes committed and the unemployment rate. 
 
@@ -353,85 +456,15 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
   coord_flip()
 ```
 
-
- We can see that the 25-44 age category is the largest age category density for committing crimes across all boroughs. As also demonstrated, Bronx seems to have the highest density of crimes for all age categories amongst other boroughs. 
-
-
-```{r density plot for age, message=FALSE, warning=FALSE, echo=FALSE, fig.width=10}
-theme_set(theme_classic())
-# Plot
-g <- ggplot(arrests_df, aes(arrest_boro))
-g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
-    labs(title="Density plot", 
-         subtitle="Number of crimes per boro per age group distribution",
-         caption="Source: arrests_df",
-         x="Borough",
-         fill="# crimes committed per age group") 
-```
-
-The treemap was used to study which race is common for committing a crime. As illustrated, BLACK is the typical race. However, Brooklyn appears to have more crimes committed by BLACK than the Bronx. 
-
-```{r treemap for arrests, message=FALSE, warning=FALSE, echo=FALSE}
-map <- murder_counts %>% filter(year == 2018)
-treemap(map, #Your data frame object
-        index=c("perp_race","arrest_boro"),  #A list of your categorical variables
-        vSize = "murder_counts",  #This is your quantitative variable
-        type="categorical", #Type sets the organization and color scheme of your treemap
-        vColor = "arrest_boro", #Type sets the organization and color scheme of your treemap
-        palette = "Set1",  #Select your color palette from the RColorBrewer presets or make your own.
-        title="Crime distribution committed by different races - year 2018", #Customize your title
-        fontsize.title = 14 #Change the font size of the title
-        ) 
-```
-
 # Statistical Analysis & Modeling
 
-To anser the initial hypothesized question, the combined dataset is utilized in a linear regression modeling exercise to understand the relationship between the variables. In this process we were able to identify which variables are the greatest predictors of the number of crimes commited.
+To answer the initial hypothesized question, the combined dataset is utilized in a linear regression modeling exercise to understand the relationship between the variables. In this process we were able to identify which variables are the greatest predictors of the number of crimes commited.
 
-```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
-source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
-dat
-```
-```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
-res <- dat %>%
-  group_by(year, boro_nm) %>%
-  filter(boro_nm != "") %>%
-  dplyr::summarise(crimes = n()) 
-res
-```
-```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
-#by_crime <- res %>% mutate_if(is.character, str_to_lower) 
+We will also verify the conditions for inference for linear modeling.
 
+## Linear Regression
 
-by_crime <- arrests_df %>% select(year, arrest_boro) %>% group_by(year, arrest_boro) %>% dplyr::summarise(crimes = n())
-colnames(by_crime) <- c("year", "boro_nm", "crimes" )
-by_crime
-
-```
-```{r filter by unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
-dat2 <- income_table
-dat2$unemployed <- as.numeric(gsub(",", "", dat2$unemployed))
-names(dat2)[1] <- "boro_nm"
-subet <- dat2[c(1:2,5)]
-by_unemployment <- subet %>%
-  group_by(year, boro_nm) %>%
-  dplyr::summarise(unemployed = round(mean(unemployed), 2)) #%>%
-  #mutate_if(is.character, str_to_lower)
-by_unemployment$boro_nm <- revalue(by_unemployment$boro_nm, c("Queens "="Queens"))
-by_unemployment
-```
-```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
-#joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) 
- 
-
-joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="boro_nm"))
-joined
-
-
-
-```
-
-To start building the predictive model, we need to see if there is a correlation between our predictor and response. In this case, crimes and unemployed. We will begin by doing some exploratory data visualization. The function `ggpairs()`  from the `GGally package` was used to create a plot matrix demonstrating how the variables relate to one another.  
+To start building the predictive model, we need to see if there is a correlation between our predictor and response. In this case, crimes and unemployed. We will begin by doing some exploratory data visualization to verify the conditions for inference. The function `ggpairs()`  from the `GGally package` was used to create a plot matrix demonstrating how the variables relate to one another.  
 
 ```{r correlation between crime and unemployed, message=FALSE, warning=FALSE, echo=FALSE}
 ggpairs(data=joined, columns = 3:4, title="Crimes employed data")
@@ -446,10 +479,10 @@ theme_set(theme_bw())  # pre-set the bw theme.
 g <- ggplot(joined, aes(unemployed, crimes)) + 
   geom_jitter() +
   geom_smooth(method="lm") +
-  labs(subtitle="Crimes per unemployed: crimes vs unemployed numbers", 
-       y="Crimes", 
-       x="Unemployed", 
-       title="Scatterplot with overlapping points", 
+  scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,150000,25000)) +
+  labs(y="Crimes", 
+       x="Unemployed Population", 
+       title="Crimes vs Unemployed Population", 
        caption="Source: joined")
 ggMarginal(g, type = "boxplot", fill="transparent")
 ```
@@ -465,45 +498,24 @@ However, to make sure that our predictor model is reliable, we need to see if th
 plot(m_unemployed, which=2, col=c("red"))  # Q-Q Plot
 ```
 
-For our model, **the Q-Q plot** shows pretty good alignment to the the line with a few points at the top slightly offset.
+For our model, **the Q-Q plot** testing the normality of the residuals shows pretty good alignment to the the line with a few points at the top slightly offset indicating some skew. 
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
 ```
 
-The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. So we tried to get investigate more mon building a mutlivariable regression model taking other variables into account.
+The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. 
 
+The model below based on race only explains ~20% of the variance in the data but the predictors of black, white and white hispanic are significant.
 
-```{r aggregate by category, message=FALSE, warning=FALSE}
-by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
-colnames(by_cat) <- c("year", "boro_nm", "susp_age_group", "susp_sex", "susp_race", "crimes")
-by_cat
+```{r change reference to M, message=FALSE, warning=FALSE}
+m_race <- lm(crimes ~ susp_race, data = filtered)
+summary(m_race) # no significance
 ```
 
-Categorize age-group preparing for dummy variables
+To improve our model we investigated further by building a mutlivariable regression model taking other variables into account.
 
-```{r construct dummy variables, message=FALSE, warning=FALSE}
-dummy_df <- by_cat
-dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
-dummy_df
-```
-
-Converting the independent variables into factors
-
-```{r convert variables into factors, message=FALSE, warning=FALSE}
-#function to categorize and indicate the cofounder variable
-#
-# function to categorise - dummy variables
-filtered <- dummy_df %>%
-  filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
-## change to factor level
-filtered$boro_nm <- as.factor(filtered$boro_nm)
-filtered$susp_age_group <- as.factor(filtered$susp_age_group)
-filtered$susp_sex <- as.factor(filtered$susp_sex)
-filtered$susp_race <- as.factor(filtered$susp_race)
-# contrasts(filtered$susp_race)
-# reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
-```
+## Multiple Regression
 
 We will start with some exploratory analysis on the filtered dataset.
 
@@ -523,33 +535,22 @@ ggplot(data = filtered, mapping = aes(x = boro_nm, y = crimes)) +
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 ```
 
-
-```{r change reference to M, message=FALSE, warning=FALSE}
-m_race <- lm(crimes ~ susp_race, data = filtered)
-summary(m_race) # no significance
-```
-
-
-Taking other variables (susp_age_group, susp_sex, and boro_nm) into account.
+We then took other variables (susp_age_group, susp_sex, and boro_nm) into account.
 
 ```{r regression summary, warning=FALSE, message=FALSE}
 m_all <- lm(crimes ~ susp_age_group + susp_sex + susp_race + boro_nm, data = filtered)
 summary(m_all)
 ```
 
-It can be seen that race **Black** is significantly associated with an average increase of 3219 in crime rates compared to other races. Now we will study the residuals.
+It can be seen that other factors remaining the same, **Black** is associated with an average increase of 3219 in crime rates compared to other races. 
+
+We study the residuals to verify the validity of our model and similarly to when we used the unemployed variable, we have concerns about the residuals distribution revealed by the **Q-Q plot**. 
 
 ```{r qqplot, message=FALSE, warning=FALSE, echo=FALSE}
 plot(m_all, which=2, col=c("red"))  # Q-Q Plot
 ```
 
-```{r scale location plot, message=FALSE, warning=FALSE, echo=FALSE}
-plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
-```
-
-Same as when we used unemployed variables, we have concerns about residuals distribution resulted from the **Q-Q plot**. 
-
-# Conclusion
+## ANOVA
 
 Given that that for our model we had an Adjusted R-squared: 0.4175, this would indicate that the model does explain 41.75% of the variability.  
 To see if this amount is significant, we analyze the variances. Since the p-values of the variances are near zero,  
@@ -559,35 +560,47 @@ To see if this amount is significant, we analyze the variances. Since the p-valu
 anova(m_all)
 ```
 
+# Conclusion
 
-## What did we learn? 
+## Summary of findings
+
+Our investigation allows us to make a number of findings:  
+
 1. While crime overall is decreasing in NYC, black individuals are still disportionaly inclined to commit more crimes. The largest coefficent in the regression model is where the suspect race is black, 3219.82. 
 
-2. The Bronx remains the boro with the highest unemployment rate, but Brooklyn and Manhatten have the highest crime rates of the 5 boros. 
+2. The Bronx remains the borough with the highest unemployment rate, but Brooklyn and Manhattan have the highest crime rates of the 5 boroughs. 
 
-3. At a marco level, each increase in unemployment by one, results in a crime increase of 1.2209. At a more micro level, being a black or white/hispanic male is a good predictor of a crime. 
+3. The 25-44 age groups is the most likely to commit crimes for both genders.  
+
+3. At a macro level, each increase in unemployment by one, results in a crime increase of 1.2209. At a more micro level, being a black or white/hispanic male is a good predictor of a crime.  
     
-4. Build a geographic geomap for the commited crimes per borough
+5. We built a geographic map of tghe distribution of commited crimes per borough.  
 
+6. With an R-squared of ~75% we found that unemployment is indeed a good predictor of crime.  
 
-## Why is this important
-1. Important in evaluating successes of policies over time
-2. Important in shaping future police inforcement policy
-3. Connection between unemployment and saftey
+7. With an R-squared of ~42% we found that our multivariable model explains some of the variability in the data but the significant skew should make us cautious.  
 
+## Why is this important?
 
+1. This kind of study is important in evaluating the success of policies over time by seeing the impact and relationships between crime and particular demographics. 
+
+2. It can also be used to shape the future of police enforcement policy by allowin the department to better use their resources to tackle most common crimes where they are more likely to be concentrated.  
+
+3. By merging crimes obersvations with socio-economic factor, we can identify connections to other variables like unemployment and shape policy by arguing that an investment in labor resources could have a significant beneficial impact on crime.  
+
+## Future Work
+
+Future work would involve collecting more variables for demographics and socio economic conditions like health and eduction and building a more encompassing model to predict crime rates. 
 
 ## Challenges
 
-1. Working with very large data sets and how we filtered it down
-2. Sourcing external scripts into Rmarkdown
+Throughout this assignment, we encountered a series of challenges like the following:
+
+1. Working with very large data sets and we filtering them down
+2. Sourcing external scripts into Rmarkdown to speed up knitting
 3. Merging datasets with no distinct identifiers across each obsrvations  
-4. Merging dataset with different observation values - lower & upper case
-5. Determining which set of variables are a better fit for regression model
-
-
-
-## Future Work
+4. Merging dataset with different inconsistent observation values
+5. Determining which set of variables are a better fit for regression modeling.
 
 ## References 
 
