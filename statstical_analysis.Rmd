@@ -1,5 +1,5 @@
 ---
-title: "statistical_exploratory_analysis"
+title: "DATA607 Final Project"
 author: "Salma Elshahawy, Mael Illien, Dhairav Chhatbar"
 date: "11/18/2019"
 output: 
