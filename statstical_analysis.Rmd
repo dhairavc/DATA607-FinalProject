@@ -346,20 +346,9 @@ merged
 
 ## Combined - Data Transformation
 
-```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
-source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
-dat
-```
-```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
-res <- dat %>%
-  group_by(year, boro_nm) %>%
-  filter(boro_nm != "") %>%
-  dplyr::summarise(crimes = n()) 
-res
-```
+We transform our datasets to prepare them to be merged.
 
 ```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
-#by_crime <- res %>% mutate_if(is.character, str_to_lower) 
 by_crime <- arrests_df %>% select(year, arrest_boro) %>% group_by(year, arrest_boro) %>% dplyr::summarise(crimes = n())
 colnames(by_crime) <- c("year", "boro_nm", "crimes" )
 by_crime
@@ -378,7 +367,6 @@ by_unemployment
 ```
 
 ```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
-#joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) 
 joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="boro_nm"))
 joined
 ```
@@ -492,6 +480,9 @@ summary(m_unemployed)
 ```
 
 As pointed by the simple linear regression, unemployment has an **R-squared  ~0.75**. This makes it a better predictor of the number of crimes. 
+
+With an R-squared value of 0.75 and significant p-value for the unemployed variable, **we have sufficient evidence to reject the null hypothesis, and accept the alternate that unemployment is a good predictor of crime.**
+
 However, to make sure that our predictor model is reliable, we need to see if the residuals are so close to the actual value. This would give us a quality indicator of how is our prediction is fitting. 
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
@@ -506,14 +497,14 @@ plot(m_unemployed, which=3, col=c("blue")) # Scale-Location Plot
 
 The residuals are not reasonably well spread above and below a pretty non horizontal line. This may raise a concern for us, this means that the relationship between the two variables are not linear. 
 
-The model below based on race only explains ~20% of the variance in the data but the predictors of black, white and white hispanic are significant.
+Since the model above may not be convincing, we looked at other factors within the arrests dataset. The model below based on race only explains ~20% of the variance in the data but it indicates that the predictors of black, white and white hispanic are significant.
 
 ```{r change reference to M, message=FALSE, warning=FALSE}
 m_race <- lm(crimes ~ susp_race, data = filtered)
 summary(m_race) # no significance
 ```
 
-To improve our model we investigated further by building a mutlivariable regression model taking other variables into account.
+To further our analysis we investigated adding more variables to build a mutlivariable regression model taking other variables into account.
 
 ## Multiple Regression
 
@@ -552,9 +543,19 @@ plot(m_all, which=2, col=c("red"))  # Q-Q Plot
 
 ## ANOVA
 
-Given that that for our model we had an Adjusted R-squared: 0.4175, this would indicate that the model does explain 41.75% of the variability.  
-To see if this amount is significant, we analyze the variances. Since the p-values of the variances are near zero,  
-**we have sufficient evidence to reject the null hypothesis, in that we can say that unemployment does impact crime**
+Given that for our model we had an Adjusted R-squared: 0.4175, this would indicate that the model does explain 41.75% of the variability.  
+
+We know that multiple regression models are written in the form below, where $\beta_i$ represents the predictor variables. 
+
+$y = \beta_0x_0+...+\beta_nx_n + residuals$
+
+To test the significance of our findings, we postulate a secondary hypothesis:
+
+\[H0:  \beta_0 = ... = \beta_n = 0\]
+\[HA:  \beta_j \neq 0; j = 1,...,n\]
+
+In order to test if these predictors are significant, we analyze the variances with ANOVA. Since the p-values of the variances are near zero,  
+**we have sufficient evidence to reject the null hypothesis and accept the alternate that at least one of the variables used in the model is predictive of crime.**
 
 ```{r}
 anova(m_all)
@@ -576,9 +577,9 @@ Our investigation allows us to make a number of findings:
     
 5. We built a geographic map of tghe distribution of commited crimes per borough.  
 
-6. With an R-squared of ~75% we found that unemployment is indeed a good predictor of crime.  
+6. With an R-squared of ~75% we found that unemployment is indeed a good predictor of crime but the model assumptions may be valid.  
 
-7. With an R-squared of ~42% we found that our multivariable model explains some of the variability in the data but the significant skew should make us cautious.  
+7. With an R-squared of ~42% we found that our multivariable model explains some of the variability in the data but the significant skew makes us cautious.  
 
 ## Why is this important?
 
@@ -596,11 +597,15 @@ Future work would involve collecting more variables for demographics and socio e
 
 Throughout this assignment, we encountered a series of challenges like the following:
 
-1. Working with very large data sets and we filtering them down
-2. Sourcing external scripts into Rmarkdown to speed up knitting
-3. Merging datasets with no distinct identifiers across each obsrvations  
-4. Merging dataset with different inconsistent observation values
-5. Determining which set of variables are a better fit for regression modeling.
+1. Working with very large data sets and we filtering them down  
+
+2. Sourcing external scripts into Rmarkdown to speed up knitting  
+
+3. Merging datasets with no distinct identifiers across each observations   
+
+4. Merging dataset with different inconsistent observation values  
+
+5. Determining which set of variables are a better fit for regression modeling
 
 ## References 
 
