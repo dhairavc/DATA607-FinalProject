@@ -59,14 +59,14 @@ source("environment_setup.R", echo = T, prompt.echo = "", spaced = F)
 ```
 
 # NYPD Arrests
-The NYPD Arrests database provides observations of confirmed (individuals NOT acquitted of all charges) crimes that are reported to the New York City Police Department (NYPD)  
+
+We will start with the NYPD Arrests Data (Historic) data from NYC Open Data found below and conduct some exploratory data analysis to find out how arrests are distributed in general. We will explore demographic trends as well as trends in particular kinds of arrest or by boroughs.
+
+This dataset provides observations of confirmed (individuals NOT acquitted of all charges) crimes as recorded New York City Police Department (NYPD).  
 
 ## NYPD Arrests - Data Import via API
 
-We will start with the NYPD Arrests Data (Historic) data from NYC Open Data found below and conduct some exploratory data analysis to find out how arrests are distributed in general. We will explore trends like for example investigating seasonality trends or trends in particular kinds of arrest or by boroughs.
-
 There are 4.8M rows, there are 18 columns and each row is an arrest.
-
 
 variable         | description
 ---------------- | -----------
