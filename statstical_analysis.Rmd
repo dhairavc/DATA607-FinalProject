@@ -236,7 +236,22 @@ g + geom_density(aes(fill=factor(age_group)), alpha=0.8) +
          fill="Age group") 
 ```
 
-This interactive map will let you explore the distribution of crime geographically.  
+The treemap below was used to study which perpetrator race is the most common by borough. As illustrated, BLACK is the greatest proportion. However, Brooklyn appears to have more crimes committed by BLACK than the Bronx. 
+
+```{r treemap for arrests, message=FALSE, warning=FALSE, echo=FALSE}
+map <- murder_counts %>% filter(year == 2018)
+treemap(map, #Your data frame object
+        index=c("perp_race","arrest_boro"),  #A list of your categorical variables
+        vSize = "murder_counts",  #This is your quantitative variable
+        type="categorical", #Type sets the organization and color scheme of your treemap
+        vColor = "arrest_boro", #Type sets the organization and color scheme of your treemap
+        palette = "Set1",  #Select your color palette from the RColorBrewer presets or make your own.
+        title="Crime distribution committed by different races - year 2018", #Customize your title
+        fontsize.title = 14 #Change the font size of the title
+        ) 
+```
+
+To take the investigation even further, this interactive map will let you explore the distribution of crime geographically.  
 
 ```{r map for arrests,echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
 arrests_map <- arrests_df %>% filter(year == 2018)
@@ -371,22 +386,6 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
   coord_flip()
 ```
 
-
-The treemap was used to study which race is common for committing a crime. As illustrated, BLACK is the typical race. However, Brooklyn appears to have more crimes committed by BLACK than the Bronx. 
-
-```{r treemap for arrests, message=FALSE, warning=FALSE, echo=FALSE}
-map <- murder_counts %>% filter(year == 2018)
-treemap(map, #Your data frame object
-        index=c("perp_race","arrest_boro"),  #A list of your categorical variables
-        vSize = "murder_counts",  #This is your quantitative variable
-        type="categorical", #Type sets the organization and color scheme of your treemap
-        vColor = "arrest_boro", #Type sets the organization and color scheme of your treemap
-        palette = "Set1",  #Select your color palette from the RColorBrewer presets or make your own.
-        title="Crime distribution committed by different races - year 2018", #Customize your title
-        fontsize.title = 14 #Change the font size of the title
-        ) 
-```
-
 # Statistical Analysis & Modeling
 
 To anser the initial hypothesized question, the combined dataset is utilized in a linear regression modeling exercise to understand the relationship between the variables. In this process we were able to identify which variables are the greatest predictors of the number of crimes commited.
@@ -429,9 +428,6 @@ by_unemployment
 
 joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="boro_nm"))
 joined
-
-
-
 ```
 
 To start building the predictive model, we need to see if there is a correlation between our predictor and response. In this case, crimes and unemployed. We will begin by doing some exploratory data visualization. The function `ggpairs()`  from the `GGally package` was used to create a plot matrix demonstrating how the variables relate to one another.  
