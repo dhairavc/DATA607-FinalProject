@@ -26,7 +26,7 @@ Presented by:
 
 ## Introduction
 
-This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on social economic information, namely unemployment and crime data in NYC. Specifically we wanted to explore the impact of unemployment on crime within New York City. The guiding question for our statistical analysis if the following hypothesis:
+This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on socio-economic information, namely unemployment and crime data in NYC. Specifically we wanted to explore the impact of unemployment on crime within New York City. The guiding question for our statistical analysis if the following hypothesis:
 
 \[H0: Unemployment \ does \ not \ impact \ crime\ (R^2 = 0) \]
 \[HA: Unemployment \ does \ impact \ crime\ (R^2 > 0) \]
@@ -242,12 +242,12 @@ leaflet(arrests_map, width = '100%') %>% addTiles() %>%
 ```
 
 # Labor Bureau
-The labor dataset provides observations on the active labor force and the population that remains unemployed per boro 
 
+We wanted to investigate if there is a correlation between crimes and unemployment rate. So we extended our analysis with another dataset from the labor bureau. The dataset has five tables for the five boroghs for a  period of four years from 2014 - 2018. 
+
+This dataset provides socio-economic observations like incomes and unemployment of the active labor force.
 
 ## Labor Bureau - Data Import via .csv
-
-We wanted to invistigate if there is a correlation between crimes and unemployment rate. So we tried to investigate another dataset from the labor bureau. The dataset has five tables for the five boroghs for a  period of four years from 2014 - 2018. 
 
 ```{r dataset per boro, message=FALSE, warning=FALSE, paged.print=TRUE}
 source("unemployed_dataset.R", echo = F, prompt.echo = "", spaced = F)
