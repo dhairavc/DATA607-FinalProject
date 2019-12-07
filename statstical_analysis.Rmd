@@ -81,7 +81,7 @@ variable         | description
 `latitude`       | Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 `longitude`      | Longitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 
-Load the data into R using the RSocrata API.
+The loaded R script will read the data into R using the RSocrata API.
 
 ```{r arrests, warning=FALSE, message=FALSE}
 source("arrests_dataset.R", echo = F, prompt.echo = "", spaced = F)
@@ -212,7 +212,7 @@ ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   
 ```
 
-We continue investigating the demographics and take a look at the distribution of crime by gender. Male adults between the ages of 25-44 remain the most common perpetrators. 
+We continue investigating the demographics and take a look at the distribution of crime by gender. Male adults between the ages of 25-44 remain the most common perpetrators. This age group is also the common for female perpetrators.
 
 ```{r age group gender distribution, message=FALSE, warning=FALSE, echo=FALSE}
 ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) + 
