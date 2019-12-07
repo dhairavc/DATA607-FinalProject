@@ -52,6 +52,8 @@ We then merged the datasets to explore further and try to draw some final conslu
 
 ## Environment Setup
 
+The packages are loaded from a separate R file.
+
 ```{r environment setup, message=FALSE, warning=FALSE}
 source("environment_setup.R", echo = T, prompt.echo = "", spaced = F)
 ```
