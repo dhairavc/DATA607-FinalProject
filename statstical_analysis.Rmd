@@ -222,6 +222,20 @@ ggplot(arrests_df, aes(x = age_group, fill = perp_sex)) +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,7000000,100000))
 ```
 
+By exploring age group futher by borough, we can see that the 25-44 age category is also the largest age category density for committing crimes across all boroughs. As also shown below, the Bronx seems to have the highest density of crimes for all age categories across boroughs. 
+
+```{r density plot for age, message=FALSE, warning=FALSE, echo=FALSE, fig.width=10}
+theme_set(theme_classic())
+# Plot
+g <- ggplot(arrests_df, aes(arrest_boro))
+g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
+    labs(title="Density plot", 
+         subtitle="Number of crimes per boro per age group distribution",
+         caption="Source: arrests_df",
+         x="Borough",
+         fill="Age group") 
+```
+
 This interactive map will let you explore the distribution of crime geographically.  
 
 ```{r map for arrests,echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
@@ -357,21 +371,6 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
   coord_flip()
 ```
 
-
- We can see that the 25-44 age category is the largest age category density for committing crimes across all boroughs. As also demonstrated, Bronx seems to have the highest density of crimes for all age categories amongst other boroughs. 
-
-
-```{r density plot for age, message=FALSE, warning=FALSE, echo=FALSE, fig.width=10}
-theme_set(theme_classic())
-# Plot
-g <- ggplot(arrests_df, aes(arrest_boro))
-g + geom_density(aes(fill=factor(age_group)), alpha=0.8) + 
-    labs(title="Density plot", 
-         subtitle="Number of crimes per boro per age group distribution",
-         caption="Source: arrests_df",
-         x="Borough",
-         fill="# crimes committed per age group") 
-```
 
 The treemap was used to study which race is common for committing a crime. As illustrated, BLACK is the typical race. However, Brooklyn appears to have more crimes committed by BLACK than the Bronx. 
 
