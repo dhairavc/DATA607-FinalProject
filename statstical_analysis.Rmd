@@ -151,8 +151,6 @@ drugs <- arrests_df %>%
 
 ## NYPD Arrest - Data Exploration & Analysis
 
-### Evolution of Crime 2014-2018
-
 Let's study the evolution of crime over the period of interest (2014-2018).
 
 What the plot below reveals is that overall crime is decreasing for all boroughs of NYC. The data year over year is very similar, appearing to simply scale down over time. 
@@ -346,6 +344,78 @@ merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)
 merged
 ```
 
+## Combined - Data Transformation
+
+```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
+source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
+dat
+```
+```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
+res <- dat %>%
+  group_by(year, boro_nm) %>%
+  filter(boro_nm != "") %>%
+  dplyr::summarise(crimes = n()) 
+res
+```
+
+```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
+#by_crime <- res %>% mutate_if(is.character, str_to_lower) 
+by_crime <- arrests_df %>% select(year, arrest_boro) %>% group_by(year, arrest_boro) %>% dplyr::summarise(crimes = n())
+colnames(by_crime) <- c("year", "boro_nm", "crimes" )
+by_crime
+```
+```{r filter by unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
+dat2 <- income_table
+dat2$unemployed <- as.numeric(gsub(",", "", dat2$unemployed))
+names(dat2)[1] <- "boro_nm"
+subet <- dat2[c(1:2,5)]
+by_unemployment <- subet %>%
+  group_by(year, boro_nm) %>%
+  dplyr::summarise(unemployed = round(mean(unemployed), 2)) #%>%
+  #mutate_if(is.character, str_to_lower)
+by_unemployment$boro_nm <- revalue(by_unemployment$boro_nm, c("Queens "="Queens"))
+by_unemployment
+```
+
+```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
+#joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) 
+joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="boro_nm"))
+joined
+```
+
+```{r aggregate by category, message=FALSE, warning=FALSE}
+by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
+colnames(by_cat) <- c("year", "boro_nm", "susp_age_group", "susp_sex", "susp_race", "crimes")
+by_cat
+```
+
+Categorize age-group preparing for dummy variables
+
+```{r construct dummy variables, message=FALSE, warning=FALSE}
+dummy_df <- by_cat
+dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
+dummy_df
+```
+
+Converting the independent variables into factors
+
+```{r convert variables into factors, message=FALSE, warning=FALSE}
+#function to categorize and indicate the cofounder variable
+#
+# function to categorise - dummy variables
+filtered <- dummy_df %>%
+  filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
+## change to factor level
+filtered$boro_nm <- as.factor(filtered$boro_nm)
+filtered$susp_age_group <- as.factor(filtered$susp_age_group)
+filtered$susp_sex <- as.factor(filtered$susp_sex)
+filtered$susp_race <- as.factor(filtered$susp_race)
+# contrasts(filtered$susp_race)
+# reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
+```
+
+## Combined - Data Exploration & Analysis
+
 We tried to plot a diverging plot to investigate which borough is above or below average. So we normalized the average unemployment rate and the number of crimes. Both Brooklyn and Bronx seem to have the most significant above average for crimes committed and the unemployment rate. 
 
 ```{r normalize unemployed, message=FALSE, warning=FALSE, echo=FALSE}
@@ -391,72 +461,6 @@ ggplot(merged, aes(x=`arrest_boro`, y=crime_z, label=crime_z)) +
 To answer the initial hypothesized question, the combined dataset is utilized in a linear regression modeling exercise to understand the relationship between the variables. In this process we were able to identify which variables are the greatest predictors of the number of crimes commited.
 
 We will also verify the conditions for inference for linear modeling.
-
-```{r fetch complaindata 14-18, message=FALSE, warning=FALSE}
-source("complain_dataset.R", echo = F, prompt.echo = "", spaced = F)
-dat
-```
-```{r aggregate crime number, message=FALSE, warning=FALSE, paged.print=TRUE}
-res <- dat %>%
-  group_by(year, boro_nm) %>%
-  filter(boro_nm != "") %>%
-  dplyr::summarise(crimes = n()) 
-res
-```
-```{r change to lowercase, message=FALSE, warning=FALSE, paged.print=TRUE}
-#by_crime <- res %>% mutate_if(is.character, str_to_lower) 
-by_crime <- arrests_df %>% select(year, arrest_boro) %>% group_by(year, arrest_boro) %>% dplyr::summarise(crimes = n())
-colnames(by_crime) <- c("year", "boro_nm", "crimes" )
-by_crime
-```
-```{r filter by unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
-dat2 <- income_table
-dat2$unemployed <- as.numeric(gsub(",", "", dat2$unemployed))
-names(dat2)[1] <- "boro_nm"
-subet <- dat2[c(1:2,5)]
-by_unemployment <- subet %>%
-  group_by(year, boro_nm) %>%
-  dplyr::summarise(unemployed = round(mean(unemployed), 2)) #%>%
-  #mutate_if(is.character, str_to_lower)
-by_unemployment$boro_nm <- revalue(by_unemployment$boro_nm, c("Queens "="Queens"))
-by_unemployment
-```
-```{r merge crime and unemployed, message=FALSE, warning=FALSE, paged.print=TRUE}
-#joined <- Reduce(function(...) merge(..., all=T), list(by_crime, by_unemployment)) 
-joined <- left_join(by_crime, by_unemployment, by = c("year"="year", "boro_nm"="boro_nm"))
-joined
-```
-
-```{r aggregate by category, message=FALSE, warning=FALSE}
-by_cat <- arrests_df %>% select(year, arrest_boro, age_group, perp_sex, perp_race) %>% group_by(year, arrest_boro, age_group, perp_sex, perp_race) %>% dplyr::summarise(crimes=n())
-colnames(by_cat) <- c("year", "boro_nm", "susp_age_group", "susp_sex", "susp_race", "crimes")
-by_cat
-```
-
-Categorize age-group preparing for dummy variables
-
-```{r construct dummy variables, message=FALSE, warning=FALSE}
-dummy_df <- by_cat
-dummy_df$susp_age_group <- revalue(by_cat$susp_age_group, c("<18"="child", "18-24"="youth", "25-44"="adult", "45-64"="senior", "65+" = "senior")) 
-dummy_df
-```
-
-Converting the independent variables into factors
-
-```{r convert variables into factors, message=FALSE, warning=FALSE}
-#function to categorize and indicate the cofounder variable
-#
-# function to categorise - dummy variables
-filtered <- dummy_df %>%
-  filter(susp_age_group %in% c("child", "youth", "adult", "senior")) 
-## change to factor level
-filtered$boro_nm <- as.factor(filtered$boro_nm)
-filtered$susp_age_group <- as.factor(filtered$susp_age_group)
-filtered$susp_sex <- as.factor(filtered$susp_sex)
-filtered$susp_race <- as.factor(filtered$susp_race)
-# contrasts(filtered$susp_race)
-# reference variable is AMERICAN INDIAN/ALASKAN NATIVE, we can rereference by using relevel(var, ref = "new_ref")
-```
 
 ## Linear Regression
 
