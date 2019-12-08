@@ -31,7 +31,6 @@ This project provided us with the opportunity of showcasing many of the skills w
 \[H0: Unemployment \ does \ not \ impact \ crime\ (R^2 = 0) \]
 \[HA: Unemployment \ does \ impact \ crime\ (R^2 > 0) \]
 
-
 We hoped that this investigation alongside exploratory data analysis would provide us with useful information that could be used to formulate policy proposals. We used the following process for each dataset:	
 
 1. Data Import (API and .csv)	
@@ -48,7 +47,6 @@ We then merged the datasets to explore further and try to draw some final conslu
 
 - [NYPD Arrests Data Historic](https://data.cityofnewyork.us/Public-Safety/NYPD-Arrests-Data-Historic-/8h9b-rp9u)
 - [Unemployment data from the Department of Labor](https://www.labor.ny.gov/stats/nyc/)
-
 
 ## Environment Setup
 
@@ -207,7 +205,6 @@ ggplot(drugs, aes(x = year, y = count, color = arrest_boro)) +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE), breaks = seq(0,30000,2500)) +
   xlab("year") + ylab("count")  + ggtitle("Dangerous Drugs Crime by Bourough") +
   theme(axis.text.x = element_text(size=10), axis.text.y = element_text(size=8))
-  
 ```
 
 We continue investigating the demographics and take a look at the distribution of crime by gender. Male adults between the ages of 25-44 remain the most common perpetrators. This age group is also the common for female perpetrators.
@@ -309,11 +306,12 @@ income_table
 ```
 
 ```{r summarize avg unemployed, message=FALSE, warning=FALSE}
-by_income <- income_table %>%
+by_avg_unemployment <- income_table %>%
   group_by(arrest_boro, year) %>%
   dplyr::summarise(avg_unemployment_rate = max(unemployment_rate)) %>%
   arrange(desc(year))
-by_income
+by_avg_unemployment$arrest_boro <- revalue(by_avg_unemployment$arrest_boro, c("Queens "="Queens"))
+by_avg_unemployment
 ```
 
 ## Labor Bureau - Data Exploration & Analysis
@@ -338,7 +336,7 @@ facet_wrap(~year, scale="free") +
 After understanding our datasets individually, we merged them into a single data frame based on the variable that were shared between the two sources, namely `year` and `arrest_boro`. This allowed us to extend our analysis to the variables in the combined dataset and to study how they behave in relation to each other.
 
 ```{r merge crime and by income, message=FALSE, warning=FALSE}
-merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_income)) %>%
+merged <- Reduce(function(...) merge(..., all=T), list(murder_counts, by_avg_unemployment)) %>%
   na.omit() %>%
   arrange(desc(year))
 merged
@@ -545,7 +543,7 @@ plot(m_all, which=2, col=c("red"))  # Q-Q Plot
 
 Given that for our model we had an Adjusted R-squared: 0.4175, this would indicate that the model does explain 41.75% of the variability.  
 
-We know that multiple regression models are written in the form below, where $\beta_i$ represents the predictor variables. 
+We know that multiple regression models are written in the form below, where $\beta_i$ represents the predictor variables coefficients. 
 
 $y = \beta_0x_0+...+\beta_nx_n + residuals$
 
@@ -575,9 +573,9 @@ Our investigation allows us to make a number of findings:
 
 3. At a macro level, each increase in unemployment by one, results in a crime increase of 1.2209. At a more micro level, being a black or white/hispanic male is a good predictor of a crime.  
     
-5. We built a geographic map of tghe distribution of commited crimes per borough.  
+5. We built a geographic map of the distribution of commited crimes per borough.  
 
-6. With an R-squared of ~75% we found that unemployment is indeed a good predictor of crime but the model assumptions may be valid.  
+6. With an R-squared of ~75% we found that unemployment is indeed a good predictor of crime but the model assumptions may not be valid for linear regression. The question could be investigated further with non-linear regression.
 
 7. With an R-squared of ~42% we found that our multivariable model explains some of the variability in the data but the significant skew makes us cautious.  
 
