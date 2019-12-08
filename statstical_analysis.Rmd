@@ -313,6 +313,7 @@ by_income <- income_table %>%
   group_by(arrest_boro, year) %>%
   dplyr::summarise(avg_unemployment_rate = max(unemployment_rate)) %>%
   arrange(desc(year))
+by_income$arrest_boro <- revalue(by_income$arrest_boro, c("Queens "="Queens"))
 by_income
 ```
 
@@ -545,7 +546,7 @@ plot(m_all, which=2, col=c("red"))  # Q-Q Plot
 
 Given that for our model we had an Adjusted R-squared: 0.4175, this would indicate that the model does explain 41.75% of the variability.  
 
-We know that multiple regression models are written in the form below, where $\beta_i$ represents the predictor variables. 
+We know that multiple regression models are written in the form below, where $\beta_i$ represents the predictor variables coefficients. 
 
 $y = \beta_0x_0+...+\beta_nx_n + residuals$
 
