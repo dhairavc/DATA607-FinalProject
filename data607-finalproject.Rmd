@@ -26,7 +26,7 @@ Presented by:
 
 ## Introduction
 
-This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on socio-economic information, namely unemployment and crime data in NYC. Specifically we wanted to explore the impact of unemployment on crime within New York City. The guiding question for our statistical analysis if the following hypothesis:
+This project provided us with the opportunity of showcasing many of the skills we have learned throughout this course and of applying them to an investigation into datasets of our choosing. We narrowed our scope to a few datasets containing information on socio-economic information, namely unemployment and crime data in NYC. Specifically we wanted to explore the impact of unemployment on crime within New York City. The guiding question for our statistical analysis is the following hypothesis:
 
 \[H0: Unemployment \ does \ not \ impact \ crime\ (R^2 = 0) \]
 \[HA: Unemployment \ does \ impact \ crime\ (R^2 > 0) \]
